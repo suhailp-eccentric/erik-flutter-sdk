@@ -27,15 +27,10 @@ class MyApp extends StatelessWidget {
 enum VehicleView { exterior, interior }
 
 class _ColorOption {
-  const _ColorOption({
-    required this.jsName,
-    required this.label,
-    required this.preview,
-  });
+  const _ColorOption({required this.jsName, required this.label});
 
   final String jsName;
   final String label;
-  final Color preview;
 }
 
 class TataEvDetailsScreen extends StatefulWidget {
@@ -47,48 +42,21 @@ class TataEvDetailsScreen extends StatefulWidget {
 
 class _TataEvDetailsScreenState extends State<TataEvDetailsScreen> {
   static const _colorOptions = [
-    _ColorOption(
-      jsName: 'Rishikesh_Rapids',
-      label: 'Rishikesh Rapids',
-      preview: Color(0xFF5B7A89),
-    ),
-    _ColorOption(jsName: 'Oxide', label: 'Oxide', preview: Color(0xFF9B6F5C)),
-    _ColorOption(
-      jsName: 'Pure_Grey',
-      label: 'Pure Grey',
-      preview: Color(0xFF8B929A),
-    ),
-    _ColorOption(
-      jsName: 'Coorg_Clouds',
-      label: 'Coorg Clouds',
-      preview: Color(0xFFC3C6CB),
-    ),
-    _ColorOption(
-      jsName: 'Pristine_White',
-      label: 'Pristine White',
-      preview: Color(0xFFF2F2EE),
-    ),
-    _ColorOption(
-      jsName: 'Andaman_Adventure',
-      label: 'Andaman Adventure',
-      preview: Color(0xFF426C63),
-    ),
-    _ColorOption(
-      jsName: 'Nainital_Nocturne',
-      label: 'Nainital Nocturne',
-      preview: Color(0xFF22252C),
-    ),
-    _ColorOption(
-      jsName: 'Bengal_Rouge_Tinted',
-      label: 'Bengal Rouge Tinted',
-      preview: Color(0xFF7B2633),
-    ),
+    _ColorOption(jsName: 'Rishikesh_Rapids', label: 'Rishikesh Rapids'),
+    _ColorOption(jsName: 'Oxide', label: 'Oxide'),
+    _ColorOption(jsName: 'Pure_Grey', label: 'Pure Grey'),
+    _ColorOption(jsName: 'Coorg_Clouds', label: 'Coorg Clouds'),
+    _ColorOption(jsName: 'Pristine_White', label: 'Pristine White'),
+    _ColorOption(jsName: 'Andaman_Adventure', label: 'Andaman Adventure'),
+    _ColorOption(jsName: 'Nainital_Nocturne', label: 'Nainital Nocturne'),
+    _ColorOption(jsName: 'Bengal_Rouge_Tinted', label: 'Bengal Rouge Tinted'),
   ];
 
   final ErikViewController _erikController = ErikViewController();
 
   VehicleView _selectedView = VehicleView.exterior;
   bool _lightsOn = false;
+  bool _didApplyInitialLights = false;
   String _selectedColorName = _colorOptions.first.jsName;
   final Map<ErikDoor, bool> _doorStates = {
     ErikDoor.frontLeft: false,
@@ -111,9 +79,25 @@ class _TataEvDetailsScreenState extends State<TataEvDetailsScreen> {
       _colorOptions.firstWhere((option) => option.jsName == _selectedColorName);
 
   @override
+  void initState() {
+    super.initState();
+    _erikController.addListener(_handleControllerChanged);
+  }
+
+  @override
   void dispose() {
+    _erikController.removeListener(_handleControllerChanged);
     _erikController.dispose();
     super.dispose();
+  }
+
+  void _handleControllerChanged() {
+    if (!_erikController.isReady || _didApplyInitialLights) {
+      return;
+    }
+
+    _didApplyInitialLights = true;
+    _turnLightsOnByDefault();
   }
 
   Future<void> _runSdkAction(Future<void> Function() action) async {
@@ -199,6 +183,24 @@ class _TataEvDetailsScreenState extends State<TataEvDetailsScreen> {
     });
   }
 
+  Future<void> _turnLightsOnByDefault() async {
+    var toggled = false;
+
+    await _runSdkAction(() async {
+      await _erikController.toggleLights();
+      toggled = true;
+    });
+
+    if (!mounted || !toggled) {
+      _didApplyInitialLights = false;
+      return;
+    }
+
+    setState(() {
+      _lightsOn = true;
+    });
+  }
+
   Future<void> _showColorPicker() async {
     final selected = await showModalBottomSheet<_ColorOption>(
       context: context,
@@ -246,25 +248,44 @@ class _TataEvDetailsScreenState extends State<TataEvDetailsScreen> {
                           child: Row(
                             children: [
                               Container(
-                                width: 24,
-                                height: 24,
+                                width: 36,
+                                height: 36,
+                                alignment: Alignment.center,
                                 decoration: BoxDecoration(
-                                  color: option.preview,
-                                  shape: BoxShape.circle,
+                                  color: const Color(0xFFF5F7FA),
+                                  borderRadius: BorderRadius.circular(10),
                                   border: Border.all(
                                     color: const Color(0xFFCFD4DA),
                                   ),
                                 ),
+                                child: const Icon(
+                                  Icons.palette_outlined,
+                                  size: 18,
+                                  color: Color(0xFF5B6572),
+                                ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
-                                child: Text(
-                                  option.label,
-                                  style: const TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black,
-                                  ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      option.label,
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    const Text(
+                                      'Tap to apply this finish',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Color(0xFF6B7280),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                               if (isSelected)
@@ -300,7 +321,6 @@ class _TataEvDetailsScreenState extends State<TataEvDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const panelColor = Color(0xFFF5F5F5);
     const minSheetFraction = 0.18;
     const maxSheetFraction = 0.53;
 
@@ -329,57 +349,28 @@ class _TataEvDetailsScreenState extends State<TataEvDetailsScreen> {
                       child: Column(
                         children: [
                           Padding(
-                            padding: EdgeInsets.only(
-                              left: 20.0 * scale,
-                              top: 18.0 * scale,
-                              right: 20.0 * scale,
-                            ),
-                            child: SizedBox(
-                              width: 148.0 * scale,
-                              height: 61.0 * scale,
-                              child: Image.asset(
-                                'assets/images/tata_logo.png',
-                                fit: BoxFit.contain,
-                                alignment: Alignment.centerLeft,
+                            padding: EdgeInsets.only(top: 18.0 * scale),
+                            child: Center(
+                              child: SizedBox(
+                                width: 148.0 * scale,
+                                height: 61.0 * scale,
+                                child: Image.asset(
+                                  'assets/images/tata_logo.png',
+                                  fit: BoxFit.contain,
+                                  alignment: Alignment.center,
+                                ),
                               ),
                             ),
                           ),
                           SizedBox(height: 18.0 * scale),
                           Expanded(
-                            child: ColoredBox(
-                              color: panelColor,
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 16.0 * scale,
-                                  vertical: 10.0 * scale,
-                                ),
-                                child: Align(
-                                  alignment: Alignment.topCenter,
-                                  child: Container(
-                                    constraints: BoxConstraints(
-                                      maxWidth: 380.0 * scale,
-                                      maxHeight: 282.0 * scale,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.black,
-                                      borderRadius: BorderRadius.circular(24),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withValues(
-                                            alpha: 0.16,
-                                          ),
-                                          blurRadius: 28,
-                                          offset: const Offset(0, 14),
-                                        ),
-                                      ],
-                                    ),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(24),
-                                      child: ErikView(
-                                        controller: _erikController,
-                                      ),
-                                    ),
-                                  ),
+                            child: Align(
+                              alignment: Alignment.topCenter,
+                              child: SizedBox(
+                                width: double.infinity,
+                                child: AspectRatio(
+                                  aspectRatio: 16 / 9,
+                                  child: ErikView(controller: _erikController),
                                 ),
                               ),
                             ),
@@ -570,7 +561,6 @@ class _ActionBottomSheet extends StatelessWidget {
                 _ActionValueRow(
                   title: 'Paint Finish',
                   value: selectedColor.label,
-                  colorPreview: selectedColor.preview,
                   buttonLabel: 'SELECT',
                   onPressed: onColorPressed,
                 ),
@@ -710,14 +700,12 @@ class _ActionValueRow extends StatelessWidget {
   const _ActionValueRow({
     required this.title,
     required this.value,
-    required this.colorPreview,
     required this.buttonLabel,
     required this.onPressed,
   });
 
   final String title;
   final String value;
-  final Color colorPreview;
   final String buttonLabel;
   final Future<void> Function() onPressed;
 
@@ -741,12 +729,18 @@ class _ActionValueRow extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    width: 12,
-                    height: 12,
+                    width: 28,
+                    height: 28,
+                    alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: colorPreview,
-                      shape: BoxShape.circle,
+                      color: const Color(0xFFF5F7FA),
+                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: const Color(0xFFD1D5DB)),
+                    ),
+                    child: const Icon(
+                      Icons.palette_outlined,
+                      size: 16,
+                      color: Color(0xFF5B6572),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -799,6 +793,7 @@ class _BooleanPillControl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: 188,
       height: 36,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -843,13 +838,16 @@ class _BooleanPill extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        width: 88,
+        height: double.infinity,
+        alignment: Alignment.center,
         decoration: BoxDecoration(
           color: selected ? Colors.black : Colors.white,
           borderRadius: BorderRadius.circular(999),
         ),
         child: Text(
           label,
+          textAlign: TextAlign.center,
           style: TextStyle(
             color: selected ? Colors.white : const Color(0xFF5B5B5B),
             fontSize: 11,
