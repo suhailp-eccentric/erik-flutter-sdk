@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -6,14 +7,17 @@ import 'package:webview_flutter_android/webview_flutter_android.dart';
 
 import '../erik_flutter_sdk_platform_interface.dart';
 import 'erik_asset_server.dart';
+import 'erik_view_controller.dart';
 
 class ErikView extends StatefulWidget {
   const ErikView({
     super.key,
+    required this.controller,
     this.entryPoint = 'index.html',
     this.backgroundColor = Colors.black,
   });
 
+  final ErikViewController controller;
   final String entryPoint;
   final Color backgroundColor;
 
@@ -46,7 +50,7 @@ class _ErikViewState extends State<ErikView> {
       final isEmulator = await ErikFlutterSdkPlatform.instance.isEmulator();
       if (!mounted) return;
 
-      if (isEmulator) {
+      if (Platform.isAndroid && isEmulator) {
         setState(() {
           _isLoading = false;
           _errorMessage =
@@ -58,9 +62,16 @@ class _ErikViewState extends State<ErikView> {
       _controller = WebViewController()
         ..setJavaScriptMode(JavaScriptMode.unrestricted)
         ..setBackgroundColor(widget.backgroundColor)
+        ..addJavaScriptChannel(
+          'ErikBridge',
+          onMessageReceived: (_) {
+            widget.controller.markBridgeReady();
+          },
+        )
         ..setNavigationDelegate(
           NavigationDelegate(
             onPageStarted: (_) {
+              widget.controller.markPageStarted();
               if (!mounted) return;
               setState(() {
                 _isLoading = true;
@@ -68,6 +79,19 @@ class _ErikViewState extends State<ErikView> {
               });
             },
             onPageFinished: (_) {
+              widget.controller.markPageFinished();
+              unawaited(
+                _controller?.runJavaScript('''
+(function waitForErikBridge() {
+  if (typeof window.__erik !== 'undefined' &&
+      typeof ErikBridge !== 'undefined') {
+    ErikBridge.postMessage('ready');
+    return;
+  }
+  setTimeout(waitForErikBridge, 250);
+})();
+'''),
+              );
               if (!mounted) return;
               setState(() {
                 _isLoading = false;
@@ -83,6 +107,7 @@ class _ErikViewState extends State<ErikView> {
           ),
         );
 
+      widget.controller.attachWebViewController(_controller!);
       final url = await ErikAssetServer.instance.urlForEntryPoint(
         widget.entryPoint,
       );

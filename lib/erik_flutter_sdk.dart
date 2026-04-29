@@ -1,3 +1,4 @@
+export 'src/erik_view_controller.dart';
 export 'src/erik_view.dart';
 import 'erik_flutter_sdk_platform_interface.dart';
 
