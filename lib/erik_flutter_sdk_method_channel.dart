@@ -16,4 +16,10 @@ class MethodChannelErikFlutterSdk extends ErikFlutterSdkPlatform {
     );
     return version;
   }
+
+  @override
+  Future<bool> isEmulator() async {
+    final result = await methodChannel.invokeMethod<bool>('isEmulator');
+    return result ?? false;
+  }
 }

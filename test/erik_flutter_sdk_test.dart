@@ -9,10 +9,14 @@ class MockErikFlutterSdkPlatform
     implements ErikFlutterSdkPlatform {
   @override
   Future<String?> getPlatformVersion() => Future.value('42');
+
+  @override
+  Future<bool> isEmulator() => Future.value(false);
 }
 
 void main() {
-  final ErikFlutterSdkPlatform initialPlatform = ErikFlutterSdkPlatform.instance;
+  final ErikFlutterSdkPlatform initialPlatform =
+      ErikFlutterSdkPlatform.instance;
 
   test('$MethodChannelErikFlutterSdk is the default instance', () {
     expect(initialPlatform, isInstanceOf<MethodChannelErikFlutterSdk>());

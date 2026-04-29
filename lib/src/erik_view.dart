@@ -1,0 +1,155 @@
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_android/webview_flutter_android.dart';
+
+import '../erik_flutter_sdk_platform_interface.dart';
+import 'erik_asset_server.dart';
+
+class ErikView extends StatefulWidget {
+  const ErikView({
+    super.key,
+    this.entryPoint = 'index.html',
+    this.backgroundColor = Colors.black,
+  });
+
+  final String entryPoint;
+  final Color backgroundColor;
+
+  @override
+  State<ErikView> createState() => _ErikViewState();
+}
+
+class _ErikViewState extends State<ErikView> {
+  WebViewController? _controller;
+
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  bool get _supportsWebView => Platform.isAndroid || Platform.isIOS;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!_supportsWebView) {
+      _isLoading = false;
+      _errorMessage = 'ErikView is currently supported on Android and iOS.';
+      return;
+    }
+
+    _prepareView();
+  }
+
+  Future<void> _prepareView() async {
+    try {
+      final isEmulator = await ErikFlutterSdkPlatform.instance.isEmulator();
+      if (!mounted) return;
+
+      if (isEmulator) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage =
+              'ErikView needs a WebGL-capable device. This emulator does not expose the required OpenGL ES support for the bundled browser experience.';
+        });
+        return;
+      }
+
+      _controller = WebViewController()
+        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+        ..setBackgroundColor(widget.backgroundColor)
+        ..setNavigationDelegate(
+          NavigationDelegate(
+            onPageStarted: (_) {
+              if (!mounted) return;
+              setState(() {
+                _isLoading = true;
+                _errorMessage = null;
+              });
+            },
+            onPageFinished: (_) {
+              if (!mounted) return;
+              setState(() {
+                _isLoading = false;
+              });
+            },
+            onWebResourceError: (error) {
+              if (!mounted) return;
+              setState(() {
+                _isLoading = false;
+                _errorMessage = error.description;
+              });
+            },
+          ),
+        );
+
+      final url = await ErikAssetServer.instance.urlForEntryPoint(
+        widget.entryPoint,
+      );
+      if (!mounted) return;
+      await _controller!.loadRequest(url);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = error.toString();
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final webViewWidget = _controller == null
+        ? null
+        : WebViewWidget.fromPlatformCreationParams(
+            params: _platformParamsForController(_controller!),
+          );
+
+    return DecoratedBox(
+      decoration: BoxDecoration(color: widget.backgroundColor),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (_errorMessage == null && webViewWidget != null) webViewWidget,
+          if (_errorMessage != null)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  _errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+              ),
+            ),
+          if (_isLoading)
+            const Center(
+              child: SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(strokeWidth: 2.5),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  PlatformWebViewWidgetCreationParams _platformParamsForController(
+    WebViewController controller,
+  ) {
+    final params = PlatformWebViewWidgetCreationParams(
+      controller: controller.platform,
+      layoutDirection: TextDirection.ltr,
+    );
+
+    if (Platform.isAndroid) {
+      return AndroidWebViewWidgetCreationParams.fromPlatformWebViewWidgetCreationParams(
+        params,
+        displayWithHybridComposition: true,
+      );
+    }
+
+    return params;
+  }
+}

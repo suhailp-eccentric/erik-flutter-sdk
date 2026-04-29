@@ -26,4 +26,8 @@ abstract class ErikFlutterSdkPlatform extends PlatformInterface {
   Future<String?> getPlatformVersion() {
     throw UnimplementedError('platformVersion() has not been implemented.');
   }
+
+  Future<bool> isEmulator() {
+    throw UnimplementedError('isEmulator() has not been implemented.');
+  }
 }

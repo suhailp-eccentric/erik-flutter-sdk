@@ -12,6 +12,12 @@ public class ErikFlutterSdkPlugin: NSObject, FlutterPlugin {
     switch call.method {
     case "getPlatformVersion":
       result("iOS " + UIDevice.current.systemVersion)
+    case "isEmulator":
+      #if targetEnvironment(simulator)
+      result(true)
+      #else
+      result(false)
+      #endif
     default:
       result(FlutterMethodNotImplemented)
     }

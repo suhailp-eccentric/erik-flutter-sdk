@@ -25,10 +25,19 @@ class ErikFlutterSdkPlugin :
         call: MethodCall,
         result: Result
     ) {
-        if (call.method == "getPlatformVersion") {
-            result.success("Android ${android.os.Build.VERSION.RELEASE}")
-        } else {
-            result.notImplemented()
+        when (call.method) {
+            "getPlatformVersion" -> result.success("Android ${android.os.Build.VERSION.RELEASE}")
+            "isEmulator" -> result.success(
+                android.os.Build.FINGERPRINT.startsWith("generic") ||
+                    android.os.Build.FINGERPRINT.lowercase().contains("emulator") ||
+                    android.os.Build.MODEL.contains("Emulator") ||
+                    android.os.Build.MODEL.contains("Android SDK built for") ||
+                    android.os.Build.MANUFACTURER.contains("Genymotion") ||
+                    android.os.Build.BRAND.startsWith("generic") && android.os.Build.DEVICE.startsWith("generic") ||
+                    "google_sdk" == android.os.Build.PRODUCT ||
+                    android.os.Build.PRODUCT.contains("sdk_gphone")
+            )
+            else -> result.notImplemented()
         }
     }
 

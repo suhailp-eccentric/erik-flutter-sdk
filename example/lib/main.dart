@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:erik_flutter_sdk/erik_flutter_sdk.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -70,9 +71,36 @@ class _TataEvDetailsScreenState extends State<TataEvDetailsScreen> {
                         height: 323.0 * scale,
                         child: ColoredBox(
                           color: panelColor,
-                          child: Image.asset(
-                            'assets/images/car.png',
-                            fit: BoxFit.cover,
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 16.0 * scale,
+                              vertical: 22.0 * scale,
+                            ),
+                            child: Center(
+                              child: Container(
+                                constraints: BoxConstraints(
+                                  maxWidth: 380.0 * scale,
+                                  maxHeight: 282.0 * scale,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.black,
+                                  borderRadius: BorderRadius.circular(24),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.16,
+                                      ),
+                                      blurRadius: 28,
+                                      offset: const Offset(0, 14),
+                                    ),
+                                  ],
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(24),
+                                  child: const ErikView(),
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ),
