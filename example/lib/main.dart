@@ -52,11 +52,7 @@ class _TataEvDetailsScreenState extends State<TataEvDetailsScreen> {
       label: 'Rishikesh Rapids',
       preview: Color(0xFF5B7A89),
     ),
-    _ColorOption(
-      jsName: 'Oxide',
-      label: 'Oxide',
-      preview: Color(0xFF9B6F5C),
-    ),
+    _ColorOption(jsName: 'Oxide', label: 'Oxide', preview: Color(0xFF9B6F5C)),
     _ColorOption(
       jsName: 'Pure_Grey',
       label: 'Pure Grey',
@@ -104,16 +100,15 @@ class _TataEvDetailsScreenState extends State<TataEvDetailsScreen> {
   };
 
   bool get _allDoorsOpen => [
-        ErikDoor.frontLeft,
-        ErikDoor.frontRight,
-        ErikDoor.rearLeft,
-        ErikDoor.rearRight,
-        ErikDoor.boot,
-      ].every((door) => _doorStates[door] ?? false);
+    ErikDoor.frontLeft,
+    ErikDoor.frontRight,
+    ErikDoor.rearLeft,
+    ErikDoor.rearRight,
+    ErikDoor.boot,
+  ].every((door) => _doorStates[door] ?? false);
 
-  _ColorOption get _selectedColor => _colorOptions.firstWhere(
-        (option) => option.jsName == _selectedColorName,
-      );
+  _ColorOption get _selectedColor =>
+      _colorOptions.firstWhere((option) => option.jsName == _selectedColorName);
 
   @override
   void dispose() {
@@ -129,9 +124,9 @@ class _TataEvDetailsScreenState extends State<TataEvDetailsScreen> {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Action failed: $error')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Action failed: $error')));
     }
   }
 
@@ -187,16 +182,21 @@ class _TataEvDetailsScreenState extends State<TataEvDetailsScreen> {
     await _runSdkAction(() => _erikController.setAllDoorsOpen(open));
   }
 
-  Future<void> _setLightsOn(bool on) async {
-    if (_lightsOn == on) {
+  Future<void> _toggleLights() async {
+    var toggled = false;
+
+    await _runSdkAction(() async {
+      await _erikController.toggleLights();
+      toggled = true;
+    });
+
+    if (!mounted || !toggled) {
       return;
     }
 
     setState(() {
-      _lightsOn = on;
+      _lightsOn = !_lightsOn;
     });
-
-    await _runSdkAction(_erikController.toggleLights);
   }
 
   Future<void> _showColorPicker() async {
@@ -226,12 +226,10 @@ class _TataEvDetailsScreenState extends State<TataEvDetailsScreen> {
                   child: ListView.separated(
                     shrinkWrap: true,
                     itemCount: _colorOptions.length,
-                    separatorBuilder: (_, index) =>
-                        const SizedBox(height: 10),
+                    separatorBuilder: (_, index) => const SizedBox(height: 10),
                     itemBuilder: (context, index) {
                       final option = _colorOptions[index];
-                      final isSelected =
-                          option.jsName == _selectedColor.jsName;
+                      final isSelected = option.jsName == _selectedColor.jsName;
                       return InkWell(
                         borderRadius: BorderRadius.circular(16),
                         onTap: () => Navigator.of(context).pop(option),
@@ -311,12 +309,15 @@ class _TataEvDetailsScreenState extends State<TataEvDetailsScreen> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final scale = constraints.maxWidth / 411.0;
-            final maxSheetFractionForViewport = math.min(
-              maxSheetFraction,
-              560.0 / constraints.maxHeight,
-            ).toDouble();
-            final collapsedSheetHeight = constraints.maxHeight * minSheetFraction;
-            final contentBottomPadding = collapsedSheetHeight - 18;
+            final maxSheetFractionForViewport = math
+                .min(maxSheetFraction, 560.0 / constraints.maxHeight)
+                .toDouble();
+            final collapsedSheetHeight =
+                constraints.maxHeight * minSheetFraction;
+            final contentBottomPadding = math.max(
+              0.0,
+              collapsedSheetHeight - 18.0,
+            );
 
             return AnimatedBuilder(
               animation: _erikController,
@@ -374,7 +375,9 @@ class _TataEvDetailsScreenState extends State<TataEvDetailsScreen> {
                                     ),
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(24),
-                                      child: ErikView(controller: _erikController),
+                                      child: ErikView(
+                                        controller: _erikController,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -411,7 +414,7 @@ class _TataEvDetailsScreenState extends State<TataEvDetailsScreen> {
                               onVehicleViewChanged: _setVehicleView,
                               onAllDoorsChanged: _setAllDoorsOpen,
                               onDoorChanged: _setDoorOpen,
-                              onLightsChanged: _setLightsOn,
+                              onLightsPressed: _toggleLights,
                               onColorPressed: _showColorPicker,
                             );
                           },
@@ -441,7 +444,7 @@ class _ActionBottomSheet extends StatelessWidget {
     required this.onVehicleViewChanged,
     required this.onAllDoorsChanged,
     required this.onDoorChanged,
-    required this.onLightsChanged,
+    required this.onLightsPressed,
     required this.onColorPressed,
   });
 
@@ -455,7 +458,7 @@ class _ActionBottomSheet extends StatelessWidget {
   final ValueChanged<VehicleView> onVehicleViewChanged;
   final ValueChanged<bool> onAllDoorsChanged;
   final Future<void> Function(ErikDoor door, bool open) onDoorChanged;
-  final ValueChanged<bool> onLightsChanged;
+  final Future<void> Function() onLightsPressed;
   final Future<void> Function() onColorPressed;
 
   @override
@@ -479,10 +482,11 @@ class _ActionBottomSheet extends StatelessWidget {
         ),
         child: SafeArea(
           top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          child: Opacity(
+            opacity: isReady ? 1 : 0.7,
+            child: ListView(
+              controller: scrollController,
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
               children: [
                 Center(
                   child: Container(
@@ -506,7 +510,7 @@ class _ActionBottomSheet extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   isReady
-                      ? 'Grouped actions are live and wired to the SDK.'
+                      ? 'Interact with the controls below'
                       : 'Waiting for the 3D scene to finish loading.',
                   style: TextStyle(
                     fontSize: 13,
@@ -514,77 +518,61 @@ class _ActionBottomSheet extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: borderColor,
-                ),
+                const Divider(height: 1, thickness: 1, color: borderColor),
                 const SizedBox(height: 12),
-                Expanded(
-                  child: Opacity(
-                    opacity: isReady ? 1 : 0.7,
-                    child: ListView(
-                      controller: scrollController,
-                      padding: EdgeInsets.zero,
-                      children: [
-                        const _GroupHeader(title: 'View'),
-                        _ActionToggleRow(
-                          title: 'Vehicle View',
-                          positiveLabel: 'EXTERIOR',
-                          negativeLabel: 'INTERIOR',
-                          isPositive: selectedView == VehicleView.exterior,
-                          onChanged: (value) => onVehicleViewChanged(
-                            value ? VehicleView.exterior : VehicleView.interior,
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        const _GroupHeader(title: 'Doors'),
-                        _ActionToggleRow(
-                          title: 'All Doors',
-                          positiveLabel: 'OPEN',
-                          negativeLabel: 'CLOSE',
-                          isPositive: allDoorsOpen,
-                          onChanged: onAllDoorsChanged,
-                        ),
-                        const SizedBox(height: 10),
-                        for (final door in [
-                          ErikDoor.frontLeft,
-                          ErikDoor.frontRight,
-                          ErikDoor.rearLeft,
-                          ErikDoor.rearRight,
-                          ErikDoor.boot,
-                          ErikDoor.sunroof,
-                        ]) ...[
-                          _ActionToggleRow(
-                            title: door._label,
-                            positiveLabel: 'OPEN',
-                            negativeLabel: 'CLOSE',
-                            isPositive: doorStates[door] ?? false,
-                            onChanged: (value) => onDoorChanged(door, value),
-                          ),
-                          const SizedBox(height: 10),
-                        ],
-                        const SizedBox(height: 8),
-                        const _GroupHeader(title: 'Lights'),
-                        _ActionToggleRow(
-                          title: 'Scene Lights',
-                          positiveLabel: 'ON',
-                          negativeLabel: 'OFF',
-                          isPositive: lightsOn,
-                          onChanged: onLightsChanged,
-                        ),
-                        const SizedBox(height: 18),
-                        const _GroupHeader(title: 'Colors'),
-                        _ActionValueRow(
-                          title: 'Paint Finish',
-                          value: selectedColor.label,
-                          colorPreview: selectedColor.preview,
-                          buttonLabel: 'SELECT',
-                          onPressed: onColorPressed,
-                        ),
-                      ],
-                    ),
+                const _GroupHeader(title: 'View'),
+                _ActionToggleRow(
+                  title: 'Vehicle View',
+                  positiveLabel: 'EXTERIOR',
+                  negativeLabel: 'INTERIOR',
+                  isPositive: selectedView == VehicleView.exterior,
+                  onChanged: (value) => onVehicleViewChanged(
+                    value ? VehicleView.exterior : VehicleView.interior,
                   ),
+                ),
+                const SizedBox(height: 18),
+                const _GroupHeader(title: 'Doors'),
+                _ActionToggleRow(
+                  title: 'All Doors',
+                  positiveLabel: 'OPEN',
+                  negativeLabel: 'CLOSE',
+                  isPositive: allDoorsOpen,
+                  onChanged: onAllDoorsChanged,
+                ),
+                const SizedBox(height: 10),
+                for (final door in [
+                  ErikDoor.frontLeft,
+                  ErikDoor.frontRight,
+                  ErikDoor.rearLeft,
+                  ErikDoor.rearRight,
+                  ErikDoor.boot,
+                  ErikDoor.sunroof,
+                ]) ...[
+                  _ActionToggleRow(
+                    title: door._label,
+                    positiveLabel: 'OPEN',
+                    negativeLabel: 'CLOSE',
+                    isPositive: doorStates[door] ?? false,
+                    onChanged: (value) => onDoorChanged(door, value),
+                  ),
+                  const SizedBox(height: 10),
+                ],
+                const SizedBox(height: 8),
+                const _GroupHeader(title: 'Lights'),
+                _ActionStatusRow(
+                  title: 'Scene Lights',
+                  value: lightsOn ? 'ON' : 'OFF',
+                  buttonLabel: 'TOGGLE',
+                  onPressed: onLightsPressed,
+                ),
+                const SizedBox(height: 18),
+                const _GroupHeader(title: 'Colors'),
+                _ActionValueRow(
+                  title: 'Paint Finish',
+                  value: selectedColor.label,
+                  colorPreview: selectedColor.preview,
+                  buttonLabel: 'SELECT',
+                  onPressed: onColorPressed,
                 ),
               ],
             ),
@@ -651,6 +639,67 @@ class _ActionToggleRow extends StatelessWidget {
           negativeLabel: negativeLabel,
           isPositive: isPositive,
           onChanged: onChanged,
+        ),
+      ],
+    );
+  }
+}
+
+class _ActionStatusRow extends StatelessWidget {
+  const _ActionStatusRow({
+    required this.title,
+    required this.value,
+    required this.buttonLabel,
+    required this.onPressed,
+  });
+
+  final String title;
+  final String value;
+  final String buttonLabel;
+  final Future<void> Function() onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                value,
+                style: TextStyle(
+                  color: Colors.black.withValues(alpha: 0.64),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+        TextButton(
+          onPressed: onPressed,
+          style: TextButton.styleFrom(
+            backgroundColor: Colors.black,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          child: Text(
+            buttonLabel,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+          ),
         ),
       ],
     );
