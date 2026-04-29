@@ -9,16 +9,16 @@ import '../erik_flutter_sdk_platform_interface.dart';
 import 'erik_asset_server.dart';
 import 'erik_view_controller.dart';
 
+const _defaultErikEntryPoint = 'index.html';
+
 class ErikView extends StatefulWidget {
   const ErikView({
     super.key,
     required this.controller,
-    this.entryPoint = 'index.html',
     this.backgroundColor = Colors.black,
   });
 
   final ErikViewController controller;
-  final String entryPoint;
   final Color backgroundColor;
 
   @override
@@ -109,7 +109,7 @@ class _ErikViewState extends State<ErikView> {
 
       widget.controller.attachWebViewController(_controller!);
       final url = await ErikAssetServer.instance.urlForEntryPoint(
-        widget.entryPoint,
+        _defaultErikEntryPoint,
       );
       if (!mounted) return;
       await _controller!.loadRequest(url);

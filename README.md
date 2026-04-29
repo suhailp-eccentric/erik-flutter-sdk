@@ -2,13 +2,13 @@
 
 Flutter SDK for embedding the Erik vehicle experience inside a Flutter app on Android and iOS.
 
-The package bundles the Erik browser build, serves it from local assets, renders it inside a `WebView`, and exposes a small Dart controller API for common actions such as switching views, opening doors, toggling lights, and changing vehicle color.
+The package includes the Erik runtime, packaged assets, and a small Dart controller API for common actions such as switching views, opening doors, toggling lights, and changing vehicle color.
 
 ## What the SDK includes
 
 - `ErikView`: widget that hosts the bundled Erik experience
 - `ErikViewController`: controller for driving the experience from Flutter
-- Bundled Erik web assets under `assets/erik_browser/`
+- Bundled Erik runtime assets
 - Native plugin hooks for Android and iOS
 
 ## Platform support
@@ -16,7 +16,7 @@ The package bundles the Erik browser build, serves it from local assets, renders
 - Android
 - iOS
 
-`ErikView` is currently intended for mobile `WebView` hosts only. On Android emulators, the SDK shows a fallback message because the bundled experience requires a WebGL-capable environment.
+`ErikView` is currently supported on Android and iOS. On Android emulators, the SDK shows a fallback message because the experience requires a WebGL-capable environment.
 
 ## Installation
 
@@ -42,7 +42,7 @@ import 'package:erik_flutter_sdk/erik_flutter_sdk.dart';
 
 ## Android setup
 
-The SDK serves bundled assets from `http://127.0.0.1:<port>/`, so your host app should allow local cleartext traffic.
+The SDK uses local loopback transport internally on Android, so your host app should allow local cleartext traffic.
 
 Add internet permission in your Android manifest if your app does not already have it:
 
@@ -141,7 +141,7 @@ class _ErikDemoPageState extends State<ErikDemoPage> {
 
 ## Waiting until the experience is ready
 
-Controller methods internally wait for the page and JavaScript bridge to become available, so you can call actions directly in response to button taps.
+Controller methods internally wait until the Erik experience is ready, so you can call actions directly in response to button taps.
 
 If you want to apply an initial state as soon as Erik finishes loading, listen to `ErikViewController` and react when `isReady` becomes `true`:
 
@@ -179,20 +179,18 @@ void dispose() {
 ```dart
 ErikView(
   controller: controller,
-  entryPoint: 'index.html',
   backgroundColor: Colors.black,
 )
 ```
 
 - `controller`: required `ErikViewController`
-- `entryPoint`: optional asset entry file, defaults to `index.html`
-- `backgroundColor`: optional `WebView` background color, defaults to `Colors.black`
+- `backgroundColor`: optional view background color, defaults to `Colors.black`
 
 ## Controller API
 
 ### Readiness
 
-- `isReady`: `true` once the Erik JavaScript bridge is available
+- `isReady`: `true` once the Erik experience is ready to receive commands
 
 ### View switching
 
@@ -259,6 +257,6 @@ await _erikController.setColor('Oxide');
 
 ## Notes
 
-- The SDK bundles and serves its own Erik assets. You do not need to copy the browser build into your app.
-- Errors from the web experience are surfaced as Dart exceptions, so SDK actions should usually be wrapped in `try/catch`.
+- The SDK bundles the runtime assets it needs. You do not need to copy Erik content into your app separately.
+- Runtime errors are surfaced as Dart exceptions, so SDK actions should usually be wrapped in `try/catch`.
 - The example app in [example/lib/main.dart](/Users/suhailpatel94/Documents/projects/eccentric/erik_flutter_sdk/example/lib/main.dart) shows a fuller production-style integration with view toggles, door controls, and color selection.
