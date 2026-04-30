@@ -107,10 +107,7 @@ class _ErikDemoPageState extends State<ErikDemoPage> {
         child: Column(
           children: [
             Expanded(
-              child: ErikView(
-                controller: _erikController,
-                backgroundColor: Colors.black,
-              ),
+              child: ErikView(controller: _erikController),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -180,12 +177,10 @@ void dispose() {
 ```dart
 ErikView(
   controller: controller,
-  backgroundColor: Colors.black,
 )
 ```
 
 - `controller`: required `ErikViewController`
-- `backgroundColor`: optional view background color, defaults to `Colors.black`
 
 ## Controller API
 
@@ -197,7 +192,6 @@ ErikView(
 
 - `goInterior()`
 - `goExterior()`
-- `goToView(ErikVehicleView view)`
 
 ### Doors and animations
 
@@ -222,17 +216,6 @@ Available doors:
 - `toggleLights()`
 - `setColor(String colorName)`
 
-## Utility API
-
-The package also exports `ErikFlutterSdk` for simple platform checks:
-
-```dart
-final sdk = ErikFlutterSdk();
-
-final version = await sdk.getPlatformVersion();
-final isEmulator = await sdk.isEmulator();
-```
-
 ## Available colors
 
 The SDK exports `erikAvailableColors`:
@@ -256,8 +239,5 @@ Example:
 await _erikController.setColor('Oxide');
 ```
 
-## Notes
-
-- The SDK bundles the runtime assets it needs. You do not need to copy Erik content into your app separately.
-- Runtime errors are surfaced as Dart exceptions, so SDK actions should usually be wrapped in `try/catch`.
-- The example app in [example/lib/main.dart](/Users/suhailpatel94/Documents/projects/eccentric/erik_flutter_sdk/example/lib/main.dart) shows a fuller production-style integration with view toggles, door controls, and color selection.
+## Note
+A sample flutter application is included with the SDK.

@@ -15,11 +15,9 @@ class ErikView extends StatefulWidget {
   const ErikView({
     super.key,
     required this.controller,
-    this.backgroundColor = Colors.black,
   });
 
   final ErikViewController controller;
-  final Color backgroundColor;
 
   @override
   State<ErikView> createState() => _ErikViewState();
@@ -63,7 +61,7 @@ class _ErikViewState extends State<ErikView> {
 
       _controller = WebViewController()
         ..setJavaScriptMode(JavaScriptMode.unrestricted)
-        ..setBackgroundColor(widget.backgroundColor)
+        ..setBackgroundColor(Colors.black)
         ..addJavaScriptChannel(
           'ErikBridge',
           onMessageReceived: (_) {
@@ -149,7 +147,7 @@ class _ErikViewState extends State<ErikView> {
         }
 
         return DecoratedBox(
-          decoration: BoxDecoration(color: widget.backgroundColor),
+          decoration: const BoxDecoration(color: Colors.black),
           child: Stack(
             fit: StackFit.expand,
             children: [
