@@ -319,6 +319,10 @@ class _TataEvDetailsScreenState extends State<TataEvDetailsScreen> {
     await _runSdkAction(() => _erikController.setColor(selected.jsName));
   }
 
+  Future<void> _skipIntro() async {
+    await _runSdkAction(_erikController.skipIntro);
+  }
+
   @override
   Widget build(BuildContext context) {
     const minSheetFraction = 0.18;
@@ -366,12 +370,50 @@ class _TataEvDetailsScreenState extends State<TataEvDetailsScreen> {
                           Expanded(
                             child: Align(
                               alignment: Alignment.topCenter,
-                              child: SizedBox(
-                                width: double.infinity,
-                                child: AspectRatio(
-                                  aspectRatio: 72 / 41,
-                                  child: ErikView(controller: _erikController),
-                                ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: AspectRatio(
+                                      aspectRatio: 72 / 50,
+                                      child: ErikView(
+                                        controller: _erikController,
+                                      ),
+                                    ),
+                                  ),
+                                  AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 180),
+                                    child:
+                                        _erikController.isIntroAnimationPlaying
+                                        ? Padding(
+                                            key: const ValueKey(
+                                              'skip-intro-button',
+                                            ),
+                                            padding: EdgeInsets.only(
+                                              top: 14.0 * scale,
+                                            ),
+                                            child: FilledButton.tonal(
+                                              onPressed: _skipIntro,
+                                              style: FilledButton.styleFrom(
+                                                foregroundColor: Colors.black,
+                                                backgroundColor: const Color(
+                                                  0xFFF1F3F5,
+                                                ),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 20,
+                                                      vertical: 12,
+                                                    ),
+                                              ),
+                                              child: const Text('Skip'),
+                                            ),
+                                          )
+                                        : const SizedBox.shrink(
+                                            key: ValueKey('skip-intro-hidden'),
+                                          ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),

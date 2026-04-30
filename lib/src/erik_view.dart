@@ -12,10 +12,7 @@ import 'erik_view_controller.dart';
 const _defaultErikEntryPoint = 'index.html';
 
 class ErikView extends StatefulWidget {
-  const ErikView({
-    super.key,
-    required this.controller,
-  });
+  const ErikView({super.key, required this.controller});
 
   final ErikViewController controller;
 
@@ -62,10 +59,23 @@ class _ErikViewState extends State<ErikView> {
       _controller = WebViewController()
         ..setJavaScriptMode(JavaScriptMode.unrestricted)
         ..setBackgroundColor(Colors.black)
+        ..setOnConsoleMessage((message) {
+          final consoleMessage = message.message;
+
+          if (consoleMessage.contains('Starting trailer camera')) {
+            widget.controller.markAnimationStarted();
+          } else if (consoleMessage.contains(
+            'Trailer camera sequence finished',
+          )) {
+            widget.controller.markAnimationCompleted();
+          }
+        })
         ..addJavaScriptChannel(
           'ErikBridge',
-          onMessageReceived: (_) {
-            widget.controller.markBridgeReady();
+          onMessageReceived: (message) {
+            if (message.message == 'ready') {
+              widget.controller.markBridgeReady();
+            }
           },
         )
         ..setNavigationDelegate(
@@ -159,7 +169,10 @@ class _ErikViewState extends State<ErikView> {
                     child: Text(
                       _errorMessage!,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.white70, fontSize: 14),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
                 ),

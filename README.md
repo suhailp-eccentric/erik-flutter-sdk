@@ -16,7 +16,7 @@ The package includes the Erik runtime, packaged assets, and a small Dart control
 - Android
 - iOS
 
-`ErikView` is currently supported on Android and iOS. On Android emulators, the SDK shows a fallback message because the experience requires a WebGL-capable environment.
+`ErikView` is currently supported on Android and iOS.
 
 ## Installation
 
@@ -43,8 +43,6 @@ import 'package:erik_flutter_sdk/erik_flutter_sdk.dart';
 
 ## Android setup
 
-The SDK uses local loopback transport internally on Android, so your host app should allow local cleartext traffic.
-
 Add internet permission in your Android manifest if your app does not already have it:
 
 ```xml
@@ -57,8 +55,6 @@ Enable cleartext traffic on your `<application>`:
 <application
     android:usesCleartextTraffic="true" />
 ```
-
-The included example enables cleartext traffic in its main manifest and includes `INTERNET` in its Android app manifests.
 
 ## Basic usage
 
@@ -99,43 +95,73 @@ class _ErikDemoPageState extends State<ErikDemoPage> {
     }
   }
 
+  Future<void> _skipIntro() async {
+    try {
+      await _erikController.skipIntro();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Action failed: $error')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: ErikView(controller: _erikController),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                FilledButton(
-                  onPressed: () => _erikController.goExterior(),
-                  child: const Text('Exterior'),
+      body: AnimatedBuilder(
+        animation: _erikController,
+        builder: (context, _) => SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Expanded(
+                      child: ErikView(controller: _erikController),
+                    ),
+                    if (_erikController.isIntroAnimationPlaying) ...[
+                      const SizedBox(height: 12),
+                      FilledButton.tonal(
+                        onPressed: _skipIntro,
+                        child: const Text('Skip'),
+                      ),
+                    ],
+                  ],
                 ),
-                const SizedBox(width: 12),
-                FilledButton(
-                  onPressed: () => _erikController.goInterior(),
-                  child: const Text('Interior'),
-                ),
-                const SizedBox(width: 12),
-                FilledButton(
-                  onPressed: _toggleLights,
-                  child: Text(_lightsOn ? 'Lights Off' : 'Lights On'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-          ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  FilledButton(
+                    onPressed: () => _erikController.goExterior(),
+                    child: const Text('Exterior'),
+                  ),
+                  const SizedBox(width: 12),
+                  FilledButton(
+                    onPressed: () => _erikController.goInterior(),
+                    child: const Text('Interior'),
+                  ),
+                  const SizedBox(width: 12),
+                  FilledButton(
+                    onPressed: _toggleLights,
+                    child: Text(_lightsOn ? 'Lights Off' : 'Lights On'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 ```
+
+The intro trailer state is exposed through `ErikViewController.isIntroAnimationPlaying`, so you can show a `Skip` action only while that animation is running.
 
 ## Waiting until the experience is ready
 
@@ -187,6 +213,7 @@ ErikView(
 ### Readiness
 
 - `isReady`: `true` once the Erik experience is ready to receive commands
+- `isIntroAnimationPlaying`: `true` while the intro trailer camera animation is running
 
 ### View switching
 
@@ -197,9 +224,6 @@ ErikView(
 
 - `openDoor(ErikDoor door)`
 - `closeDoor(ErikDoor door)`
-- `playDoor(ErikDoor door, ErikAnimationDirection direction)`
-- `openAllDoors()`
-- `closeAllDoors()`
 - `setAllDoorsOpen(bool open)`
 
 Available doors:
@@ -215,6 +239,7 @@ Available doors:
 
 - `toggleLights()`
 - `setColor(String colorName)`
+- `skipIntro()`
 
 ## Available colors
 

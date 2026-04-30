@@ -26,9 +26,11 @@ class ErikViewController extends ChangeNotifier {
   Completer<void> _pageFinishedCompleter = Completer<void>();
 
   bool _isReady = false;
+  bool _isIntroAnimationPlaying = false;
   Future<void>? _bridgeAvailabilityFuture;
 
   bool get isReady => _isReady;
+  bool get isIntroAnimationPlaying => _isIntroAnimationPlaying;
 
   Future<void> openDoor(ErikDoor door) {
     return playDoor(door, ErikAnimationDirection.forward);
@@ -77,6 +79,20 @@ class ErikViewController extends ChangeNotifier {
   Future<void> setColor(String colorName) {
     final escapedColorName = colorName.replaceAll("'", r"\'");
     return _runErikCommand("__erik.setColor('$escapedColorName')");
+  }
+
+  Future<void> skipIntro() async {
+    final wasPlaying = _isIntroAnimationPlaying;
+    _setIntroAnimationPlaying(false);
+
+    try {
+      await _runErikCommand('__erik.skipIntro()');
+    } catch (_) {
+      if (wasPlaying) {
+        _setIntroAnimationPlaying(true);
+      }
+      rethrow;
+    }
   }
 
   Future<void> _runErikCommand(String command) async {
@@ -143,6 +159,7 @@ class ErikViewController extends ChangeNotifier {
     _bridgeAvailabilityFuture = null;
     _pageFinishedCompleter = Completer<void>();
     _setReady(false);
+    _setIntroAnimationPlaying(false);
   }
 
   void markPageFinished() {
@@ -163,6 +180,14 @@ class ErikViewController extends ChangeNotifier {
     _setReady(true);
   }
 
+  void markAnimationStarted() {
+    _setIntroAnimationPlaying(true);
+  }
+
+  void markAnimationCompleted() {
+    _setIntroAnimationPlaying(false);
+  }
+
   Future<void> _ensureBridgeReadySync() async {
     try {
       final controller = await _webViewControllerCompleter.future;
@@ -178,6 +203,15 @@ class ErikViewController extends ChangeNotifier {
     }
 
     _isReady = ready;
+    notifyListeners();
+  }
+
+  void _setIntroAnimationPlaying(bool playing) {
+    if (_isIntroAnimationPlaying == playing) {
+      return;
+    }
+
+    _isIntroAnimationPlaying = playing;
     notifyListeners();
   }
 }
