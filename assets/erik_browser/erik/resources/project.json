@@ -213,7 +213,8 @@
           1.27
         ],
         "max_radius": 9.5,
-        "min_radius": 4,
+        "min_radius": 9.5,
+        "__comment":"min_radius: 4 , this is the old value to make zoom happen again",
         "focal_length": 105.6,
         "max_elevation": 1.4,
         "min_elevation": 0.03
