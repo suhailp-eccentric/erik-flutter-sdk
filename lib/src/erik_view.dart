@@ -30,6 +30,8 @@ class _ErikViewState extends State<ErikView> {
 
   bool _isLoading = true;
   String? _errorMessage;
+  bool _didLogFlutterMetrics = false;
+  bool _didLogRuntimeMetrics = false;
 
   bool get _supportsWebView => Platform.isAndroid || Platform.isIOS;
 
@@ -72,6 +74,7 @@ class _ErikViewState extends State<ErikView> {
           NavigationDelegate(
             onPageStarted: (_) {
               widget.controller.markPageStarted();
+              _didLogRuntimeMetrics = false;
               if (!mounted) return;
               setState(() {
                 _isLoading = true;
@@ -96,6 +99,7 @@ class _ErikViewState extends State<ErikView> {
               setState(() {
                 _isLoading = false;
               });
+              unawaited(_logRuntimeMetrics());
             },
             onWebResourceError: (error) {
               if (!mounted) return;
@@ -130,34 +134,89 @@ class _ErikViewState extends State<ErikView> {
             params: _platformParamsForController(_controller!),
           );
 
-    return DecoratedBox(
-      decoration: BoxDecoration(color: widget.backgroundColor),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          if (_errorMessage == null && webViewWidget != null) webViewWidget,
-          if (_errorMessage != null)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(
-                  _errorMessage!,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (!_didLogFlutterMetrics &&
+            constraints.maxWidth.isFinite &&
+            constraints.maxHeight.isFinite) {
+          _didLogFlutterMetrics = true;
+          debugPrint(
+            'ErikView Flutter box: '
+            '${constraints.maxWidth.toStringAsFixed(2)} x '
+            '${constraints.maxHeight.toStringAsFixed(2)} '
+            '(ratio ${(constraints.maxWidth / constraints.maxHeight).toStringAsFixed(4)})',
+          );
+        }
+
+        return DecoratedBox(
+          decoration: BoxDecoration(color: widget.backgroundColor),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (_errorMessage == null && webViewWidget != null) webViewWidget,
+              if (_errorMessage != null)
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      _errorMessage!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.white70, fontSize: 14),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          if (_isLoading)
-            const Center(
-              child: SizedBox(
-                width: 28,
-                height: 28,
-                child: CircularProgressIndicator(strokeWidth: 2.5),
-              ),
-            ),
-        ],
-      ),
+              if (_isLoading)
+                const Center(
+                  child: SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: CircularProgressIndicator(strokeWidth: 2.5),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
+  }
+
+  Future<void> _logRuntimeMetrics() async {
+    if (_didLogRuntimeMetrics || _controller == null) {
+      return;
+    }
+
+    try {
+      final metrics = await _controller!.runJavaScriptReturningResult('''
+JSON.stringify({
+  innerWidth: window.innerWidth,
+  innerHeight: window.innerHeight,
+  devicePixelRatio: window.devicePixelRatio,
+  visualViewport: window.visualViewport
+    ? {
+        width: window.visualViewport.width,
+        height: window.visualViewport.height,
+        scale: window.visualViewport.scale
+      }
+    : null,
+  canvas: (() => {
+    const canvas = document.querySelector('#erikCanvas');
+    if (!canvas) return null;
+    const rect = canvas.getBoundingClientRect();
+    return {
+      cssWidth: rect.width,
+      cssHeight: rect.height,
+      pixelWidth: canvas.width,
+      pixelHeight: canvas.height
+    };
+  })()
+})
+''');
+
+      _didLogRuntimeMetrics = true;
+      debugPrint('ErikView runtime metrics: $metrics');
+    } catch (error) {
+      debugPrint('ErikView runtime metrics failed: $error');
+    }
   }
 
   PlatformWebViewWidgetCreationParams _platformParamsForController(

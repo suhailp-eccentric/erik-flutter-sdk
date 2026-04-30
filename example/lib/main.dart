@@ -369,7 +369,7 @@ class _TataEvDetailsScreenState extends State<TataEvDetailsScreen> {
                               child: SizedBox(
                                 width: double.infinity,
                                 child: AspectRatio(
-                                  aspectRatio: 16 / 9,
+                                  aspectRatio: 72 / 41,
                                   child: ErikView(controller: _erikController),
                                 ),
                               ),
