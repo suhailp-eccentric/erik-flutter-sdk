@@ -25,7 +25,8 @@ Add the package to your Flutter app:
 ```yaml
 dependencies:
   erik_flutter_sdk:
-    path: ../erik_flutter_sdk
+    git:
+      url: https://suhailp-eccentric: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@github.com/suhailp-eccentric/erik-flutter-sdk.git
 ```
 
 Then fetch packages:
