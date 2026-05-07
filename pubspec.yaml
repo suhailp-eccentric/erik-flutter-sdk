@@ -11,8 +11,6 @@ dependencies:
   flutter:
     sdk: flutter
   plugin_platform_interface: ^2.0.2
-  webview_flutter: ^4.13.0
-  webview_flutter_android: ^4.11.0
 
 dev_dependencies:
   flutter_test:
@@ -41,11 +39,6 @@ flutter:
         pluginClass: ErikFlutterSdkPlugin
       ios:
         pluginClass: ErikFlutterSdkPlugin
-  assets:
-    - assets/erik_browser/
-    - assets/erik_browser/branding/
-    - assets/erik_browser/erik/resources/
-    - assets/erik_browser/fonts/
 
   # To add assets to your plugin package, add an assets section, like this:
   # assets:

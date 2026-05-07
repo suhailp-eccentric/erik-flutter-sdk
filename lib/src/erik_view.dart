@@ -1,15 +1,7 @@
-import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:webview_flutter/webview_flutter.dart';
-import 'package:webview_flutter_android/webview_flutter_android.dart';
-
-import '../erik_flutter_sdk_platform_interface.dart';
-import 'erik_asset_server.dart';
 import 'erik_view_controller.dart';
-
-const _defaultErikEntryPoint = 'index.html';
 
 class ErikView extends StatefulWidget {
   const ErikView({super.key, required this.controller});
@@ -21,230 +13,74 @@ class ErikView extends StatefulWidget {
 }
 
 class _ErikViewState extends State<ErikView> {
-  WebViewController? _controller;
-
-  bool _isLoading = true;
-  String? _errorMessage;
-  bool _didLogFlutterMetrics = false;
-  bool _didLogRuntimeMetrics = false;
-
-  bool get _supportsWebView => Platform.isAndroid || Platform.isIOS;
-
   @override
   void initState() {
     super.initState();
-    if (!_supportsWebView) {
-      _isLoading = false;
-      _errorMessage = 'ErikView is currently supported on Android and iOS.';
+    widget.controller.addListener(_handleControllerChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant ErikView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller == widget.controller) {
       return;
     }
 
-    _prepareView();
+    oldWidget.controller.removeListener(_handleControllerChanged);
+    widget.controller.addListener(_handleControllerChanged);
   }
 
-  Future<void> _prepareView() async {
-    try {
-      final isEmulator = await ErikFlutterSdkPlatform.instance.isEmulator();
-      if (!mounted) return;
-
-      if (Platform.isAndroid && isEmulator) {
-        setState(() {
-          _isLoading = false;
-          _errorMessage =
-              'ErikView needs a WebGL-capable device. This emulator does not expose the required OpenGL ES support for the bundled browser experience.';
-        });
-        return;
-      }
-
-      _controller = WebViewController()
-        ..setJavaScriptMode(JavaScriptMode.unrestricted)
-        ..setBackgroundColor(Colors.black)
-        ..setOnConsoleMessage((message) {
-          final consoleMessage = message.message;
-
-          if (consoleMessage.contains('Starting trailer camera')) {
-            widget.controller.markAnimationStarted();
-          } else if (consoleMessage.contains(
-            'Trailer camera sequence finished',
-          )) {
-            widget.controller.markAnimationCompleted();
-          }
-        })
-        ..addJavaScriptChannel(
-          'ErikBridge',
-          onMessageReceived: (message) {
-            if (message.message == 'ready') {
-              widget.controller.markBridgeReady();
-            }
-          },
-        )
-        ..setNavigationDelegate(
-          NavigationDelegate(
-            onPageStarted: (_) {
-              widget.controller.markPageStarted();
-              _didLogRuntimeMetrics = false;
-              if (!mounted) return;
-              setState(() {
-                _isLoading = true;
-                _errorMessage = null;
-              });
-            },
-            onPageFinished: (_) {
-              widget.controller.markPageFinished();
-              unawaited(
-                _controller?.runJavaScript('''
-(function waitForErikBridge() {
-  if (typeof window.__erik !== 'undefined' &&
-      typeof ErikBridge !== 'undefined') {
-    ErikBridge.postMessage('ready');
-    return;
+  @override
+  void dispose() {
+    widget.controller.removeListener(_handleControllerChanged);
+    widget.controller.detachPlatformView();
+    super.dispose();
   }
-  setTimeout(waitForErikBridge, 250);
-})();
-'''),
-              );
-              if (!mounted) return;
-              setState(() {
-                _isLoading = false;
-              });
-              unawaited(_logRuntimeMetrics());
-            },
-            onWebResourceError: (error) {
-              if (!mounted) return;
-              setState(() {
-                _isLoading = false;
-                _errorMessage = error.description;
-              });
-            },
-          ),
-        );
 
-      widget.controller.attachWebViewController(_controller!);
-      final url = await ErikAssetServer.instance.urlForEntryPoint(
-        _defaultErikEntryPoint,
-      );
-      if (!mounted) return;
-      await _controller!.loadRequest(url);
-    } catch (error) {
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-        _errorMessage = error.toString();
-      });
+  void _handleControllerChanged() {
+    if (mounted) {
+      setState(() {});
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final webViewWidget = _controller == null
-        ? null
-        : WebViewWidget.fromPlatformCreationParams(
-            params: _platformParamsForController(_controller!),
-          );
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (!_didLogFlutterMetrics &&
-            constraints.maxWidth.isFinite &&
-            constraints.maxHeight.isFinite) {
-          _didLogFlutterMetrics = true;
-          debugPrint(
-            'ErikView Flutter box: '
-            '${constraints.maxWidth.toStringAsFixed(2)} x '
-            '${constraints.maxHeight.toStringAsFixed(2)} '
-            '(ratio ${(constraints.maxWidth / constraints.maxHeight).toStringAsFixed(4)})',
-          );
-        }
-
-        return DecoratedBox(
-          decoration: const BoxDecoration(color: Colors.black),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              if (_errorMessage == null && webViewWidget != null) webViewWidget,
-              if (_errorMessage != null)
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(
-                      _errorMessage!,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                ),
-              if (_isLoading)
-                const Center(
-                  child: SizedBox(
-                    width: 28,
-                    height: 28,
-                    child: CircularProgressIndicator(strokeWidth: 2.5),
-                  ),
-                ),
-            ],
+    if (!Platform.isAndroid) {
+      return const DecoratedBox(
+        decoration: BoxDecoration(color: Colors.black),
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: Text(
+              'ErikView currently uses the native Android fragment flow.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white70, fontSize: 14),
+            ),
           ),
-        );
-      },
-    );
-  }
-
-  Future<void> _logRuntimeMetrics() async {
-    if (_didLogRuntimeMetrics || _controller == null) {
-      return;
-    }
-
-    try {
-      final metrics = await _controller!.runJavaScriptReturningResult('''
-JSON.stringify({
-  innerWidth: window.innerWidth,
-  innerHeight: window.innerHeight,
-  devicePixelRatio: window.devicePixelRatio,
-  visualViewport: window.visualViewport
-    ? {
-        width: window.visualViewport.width,
-        height: window.visualViewport.height,
-        scale: window.visualViewport.scale
-      }
-    : null,
-  canvas: (() => {
-    const canvas = document.querySelector('#erikCanvas');
-    if (!canvas) return null;
-    const rect = canvas.getBoundingClientRect();
-    return {
-      cssWidth: rect.width,
-      cssHeight: rect.height,
-      pixelWidth: canvas.width,
-      pixelHeight: canvas.height
-    };
-  })()
-})
-''');
-
-      _didLogRuntimeMetrics = true;
-      debugPrint('ErikView runtime metrics: $metrics');
-    } catch (error) {
-      debugPrint('ErikView runtime metrics failed: $error');
-    }
-  }
-
-  PlatformWebViewWidgetCreationParams _platformParamsForController(
-    WebViewController controller,
-  ) {
-    final params = PlatformWebViewWidgetCreationParams(
-      controller: controller.platform,
-      layoutDirection: TextDirection.ltr,
-    );
-
-    if (Platform.isAndroid) {
-      return AndroidWebViewWidgetCreationParams.fromPlatformWebViewWidgetCreationParams(
-        params,
-        displayWithHybridComposition: true,
+        ),
       );
     }
 
-    return params;
+    return DecoratedBox(
+      decoration: const BoxDecoration(color: Colors.black),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          AndroidView(
+            viewType: 'erik_flutter_sdk/erik_fragment_view',
+            layoutDirection: TextDirection.ltr,
+            onPlatformViewCreated: widget.controller.attachPlatformView,
+          ),
+          if (!widget.controller.isReady)
+            const Center(
+              child: SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(strokeWidth: 2.5),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }

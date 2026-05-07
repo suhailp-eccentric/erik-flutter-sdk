@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:flutter/services.dart';
 
 enum ErikDoor { frontLeft, frontRight, rearLeft, rearRight, boot, sunroof }
 
@@ -21,13 +21,12 @@ const List<String> erikAvailableColors = [
 ];
 
 class ErikViewController extends ChangeNotifier {
-  final Completer<WebViewController> _webViewControllerCompleter =
-      Completer<WebViewController>();
-  Completer<void> _pageFinishedCompleter = Completer<void>();
+  Completer<void> _platformViewCompleter = Completer<void>();
+  Future<void>? _stateSyncFuture;
+  MethodChannel? _channel;
 
   bool _isReady = false;
   bool _isIntroAnimationPlaying = false;
-  Future<void>? _bridgeAvailabilityFuture;
 
   bool get isReady => _isReady;
   bool get isIntroAnimationPlaying => _isIntroAnimationPlaying;
@@ -41,8 +40,9 @@ class ErikViewController extends ChangeNotifier {
   }
 
   Future<void> playDoor(ErikDoor door, ErikAnimationDirection direction) {
-    return _runErikCommand(
-      "__erik.play('${door._jsName}', '${direction.name}')",
+    return _invoke(
+      direction == ErikAnimationDirection.forward ? 'openDoor' : 'closeDoor',
+      {'door': door._jsName},
     );
   }
 
@@ -55,17 +55,13 @@ class ErikViewController extends ChangeNotifier {
   }
 
   Future<void> setAllDoorsOpen(bool open) {
-    final direction = open
-        ? ErikAnimationDirection.forward
-        : ErikAnimationDirection.reverse;
-    return _runErikCommand("__erik.allDoors('${direction.name}')");
+    return _invoke('setAllDoorsOpen', {'open': open});
   }
 
   Future<void> goToView(ErikVehicleView view) {
-    final method = view == ErikVehicleView.interior
-        ? '__erik.goInterior()'
-        : '__erik.goExterior()';
-    return _runErikCommand(method);
+    return _invoke(
+      view == ErikVehicleView.interior ? 'goInterior' : 'goExterior',
+    );
   }
 
   Future<void> goInterior() => goToView(ErikVehicleView.interior);
@@ -73,12 +69,11 @@ class ErikViewController extends ChangeNotifier {
   Future<void> goExterior() => goToView(ErikVehicleView.exterior);
 
   Future<void> toggleLights() {
-    return _runErikCommand('__erik.toggleLights()');
+    return _invoke('toggleLights');
   }
 
   Future<void> setColor(String colorName) {
-    final escapedColorName = colorName.replaceAll("'", r"\'");
-    return _runErikCommand("__erik.setColor('$escapedColorName')");
+    return _invoke('setColor', {'color': colorName});
   }
 
   Future<void> skipIntro() async {
@@ -86,7 +81,7 @@ class ErikViewController extends ChangeNotifier {
     _setIntroAnimationPlaying(false);
 
     try {
-      await _runErikCommand('__erik.skipIntro()');
+      await _invoke('skipIntro');
     } catch (_) {
       if (wasPlaying) {
         _setIntroAnimationPlaying(true);
@@ -95,106 +90,75 @@ class ErikViewController extends ChangeNotifier {
     }
   }
 
-  Future<void> _runErikCommand(String command) async {
-    final controller = await _webViewControllerCompleter.future;
-    await _ensureBridgeReady(controller);
-    final result = await controller.runJavaScriptReturningResult('''
-(() => {
-  try {
-    $command;
-    return 'ok';
-  } catch (error) {
-    return 'error:' + (error && error.message ? error.message : String(error));
-  }
-})()
-''');
-
-    final normalized = result.toString().replaceAll('"', '').trim();
-    if (normalized.startsWith('error:')) {
-      throw StateError(normalized.substring('error:'.length));
+  void attachPlatformView(int viewId) {
+    _channel?.setMethodCallHandler(null);
+    _channel = MethodChannel('erik_flutter_sdk/view_$viewId');
+    _channel!.setMethodCallHandler(_handlePlatformCall);
+    if (_platformViewCompleter.isCompleted) {
+      _platformViewCompleter = Completer<void>();
     }
+    _platformViewCompleter.complete();
+    _setReady(false);
+    _setIntroAnimationPlaying(false);
+    _stateSyncFuture = _syncState();
   }
 
-  Future<void> _ensureBridgeReady(WebViewController controller) async {
-    if (_isReady) {
-      return;
+  Future<void> detachPlatformView() async {
+    _channel?.setMethodCallHandler(null);
+    _channel = null;
+    if (_platformViewCompleter.isCompleted) {
+      _platformViewCompleter = Completer<void>();
     }
-
-    await _pageFinishedCompleter.future;
-    _bridgeAvailabilityFuture ??= _waitForBridgeAvailability(controller);
-    await _bridgeAvailabilityFuture;
-  }
-
-  Future<void> _waitForBridgeAvailability(WebViewController controller) async {
-    const totalAttempts = 60;
-
-    for (var attempt = 0; attempt < totalAttempts; attempt++) {
-      final result = await controller.runJavaScriptReturningResult(
-        "typeof window.__erik !== 'undefined'",
-      );
-
-      if (_isTruthyJsResult(result)) {
-        _setReady(true);
-        return;
-      }
-
-      await Future<void>.delayed(const Duration(milliseconds: 250));
-    }
-
-    throw StateError('Timed out waiting for the Erik JavaScript bridge.');
-  }
-
-  bool _isTruthyJsResult(Object result) {
-    final normalized = result.toString().replaceAll('"', '').trim();
-    return normalized == 'true';
-  }
-
-  void attachWebViewController(WebViewController controller) {
-    if (!_webViewControllerCompleter.isCompleted) {
-      _webViewControllerCompleter.complete(controller);
-    }
-  }
-
-  void markPageStarted() {
-    _bridgeAvailabilityFuture = null;
-    _pageFinishedCompleter = Completer<void>();
+    _stateSyncFuture = null;
     _setReady(false);
     _setIntroAnimationPlaying(false);
   }
 
-  void markPageFinished() {
-    _bridgeAvailabilityFuture = null;
-    if (!_pageFinishedCompleter.isCompleted) {
-      _pageFinishedCompleter.complete();
-    }
-    if (_webViewControllerCompleter.isCompleted) {
-      unawaited(_ensureBridgeReadySync());
+  Future<dynamic> _handlePlatformCall(MethodCall call) async {
+    switch (call.method) {
+      case 'onStateChanged':
+        _applyState(call.arguments);
+        return null;
+      default:
+        throw MissingPluginException(
+          'Unknown ErikView callback ${call.method}',
+        );
     }
   }
 
-  void markBridgeReady() {
-    _bridgeAvailabilityFuture = null;
-    if (!_pageFinishedCompleter.isCompleted) {
-      _pageFinishedCompleter.complete();
+  Future<void> _syncState() async {
+    final channel = await _requireChannel();
+    final payload = await channel.invokeMethod<Object?>('getState');
+    if (payload != null) {
+      _applyState(payload);
     }
-    _setReady(true);
   }
 
-  void markAnimationStarted() {
-    _setIntroAnimationPlaying(true);
+  void _applyState(Object? payload) {
+    final state = payload is Map<Object?, Object?> ? payload : null;
+    _setReady(state?['isReady'] == true);
+    _setIntroAnimationPlaying(state?['isIntroAnimationPlaying'] == true);
   }
 
-  void markAnimationCompleted() {
-    _setIntroAnimationPlaying(false);
-  }
-
-  Future<void> _ensureBridgeReadySync() async {
-    try {
-      final controller = await _webViewControllerCompleter.future;
-      await _ensureBridgeReady(controller);
-    } catch (_) {
-      // Keep the controller usable even if initial boot takes longer.
+  Future<MethodChannel> _requireChannel() async {
+    await _platformViewCompleter.future;
+    final channel = _channel;
+    if (channel == null) {
+      throw StateError('ErikView is not attached to a native Android view.');
     }
+    return channel;
+  }
+
+  Future<void> _invoke(String method, [Object? arguments]) async {
+    final channel = await _requireChannel();
+    await _stateSyncFuture;
+    await channel.invokeMethod<void>(method, arguments);
+  }
+
+  @override
+  void dispose() {
+    unawaited(detachPlatformView());
+    super.dispose();
   }
 
   void _setReady(bool ready) {
@@ -220,17 +184,17 @@ extension on ErikDoor {
   String get _jsName {
     switch (this) {
       case ErikDoor.frontLeft:
-        return 'FRONT_LEFT_DOOR';
+        return 'frontLeft';
       case ErikDoor.frontRight:
-        return 'FRONT_RIGHT_DOOR';
+        return 'frontRight';
       case ErikDoor.rearLeft:
-        return 'REAR_LEFT_DOOR';
+        return 'rearLeft';
       case ErikDoor.rearRight:
-        return 'REAR_RIGHT_DOOR';
+        return 'rearRight';
       case ErikDoor.boot:
-        return 'BOOT_DOOR';
+        return 'boot';
       case ErikDoor.sunroof:
-        return 'SUNROOF_OPEN';
+        return 'sunroof';
     }
   }
 }
