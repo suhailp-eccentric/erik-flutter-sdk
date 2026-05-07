@@ -1,4 +1,4 @@
-# erik_flutter_sdk
+# Erik Flutter SDK
 
 Flutter SDK for embedding the Erik vehicle experience inside a Flutter app on Android and iOS.
 
@@ -17,6 +17,10 @@ The package includes the Erik runtime, packaged assets, and a small Dart control
 - iOS
 
 `ErikView` is currently supported on Android and iOS.
+
+## Current limitations
+
+The interior view is currently rendered as an image. Because of this, microinteractions and interactive actions from inside the interior view are not supported.
 
 ## Installation
 
