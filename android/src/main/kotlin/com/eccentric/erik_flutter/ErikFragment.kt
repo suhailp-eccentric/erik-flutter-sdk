@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.ConsoleMessage
@@ -131,6 +132,20 @@ class ErikFragment : Fragment() {
                 addJavascriptInterface(ErikJavascriptBridge(::handleJavascriptMessage), JS_BRIDGE_NAME)
                 webChromeClient = createWebChromeClient()
                 webViewClient = createWebViewClient()
+                setOnTouchListener { view, event ->
+                    when (event.actionMasked) {
+                        MotionEvent.ACTION_DOWN,
+                        MotionEvent.ACTION_MOVE -> {
+                            view.parent?.requestDisallowInterceptTouchEvent(true)
+                        }
+
+                        MotionEvent.ACTION_UP,
+                        MotionEvent.ACTION_CANCEL -> {
+                            view.parent?.requestDisallowInterceptTouchEvent(false)
+                        }
+                    }
+                    false
+                }
                 loadUrl(ENTRYPOINT_URL)
                 postDelayed({ logJavascriptState(this) }, 4000)
             }
