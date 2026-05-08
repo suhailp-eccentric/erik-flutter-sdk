@@ -6,6 +6,7 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        maven(url = "https://jitpack.io")
     }
 
     dependencies {
@@ -18,6 +19,7 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        maven(url = "https://jitpack.io")
     }
 }
 
@@ -73,6 +75,7 @@ android {
 dependencies {
     implementation("androidx.fragment:fragment-ktx:1.8.8")
     implementation("androidx.webkit:webkit:1.13.0")
+    implementation("com.github.hannesa2:panoramagl:1.14")
 
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.mockito:mockito-core:5.0.0")

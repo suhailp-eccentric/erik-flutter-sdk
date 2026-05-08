@@ -1,9 +1,11 @@
 package com.eccentric.erik_flutter
 
 import android.annotation.SuppressLint
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
@@ -18,6 +20,9 @@ import android.widget.FrameLayout
 import androidx.fragment.app.Fragment
 import androidx.webkit.WebViewAssetLoader
 import androidx.webkit.WebViewClientCompat
+import com.panoramagl.PLImage
+import com.panoramagl.PLManager
+import com.panoramagl.PLSphericalPanorama
 class ErikFragment : Fragment() {
     interface Listener {
         fun onStateChanged(state: ErikRuntimeState)
@@ -28,8 +33,12 @@ class ErikFragment : Fragment() {
     private var listener: Listener? = null
     private var webView: WebView? = null
     private var assetLoader: WebViewAssetLoader? = null
+    private var panoramaManager: PLManager? = null
+    private var panoramaContainer: FrameLayout? = null
+    private var webViewContainer: FrameLayout? = null
     private var isReady = false
     private var isIntroAnimationPlaying = false
+    private var activeSurface = ActiveSurface.EXTERIOR
 
     fun setListener(listener: Listener?) {
         this.listener = listener
@@ -61,11 +70,14 @@ class ErikFragment : Fragment() {
     }
 
     fun goInterior(callback: ErikCommandCallback = ErikCommandCallback.NONE) {
-        runCommand("__erik.goInterior()", callback)
+        resetInteriorView()
+        activeSurface = ActiveSurface.INTERIOR
+        updateSurfaceVisibility()
+        callback.onSuccess()
     }
 
     fun goExterior(callback: ErikCommandCallback = ErikCommandCallback.NONE) {
-        runCommand("__erik.goExterior()", callback)
+        runCommand("__erik.goExterior()", surfaceCallback(ActiveSurface.EXTERIOR, callback))
     }
 
     fun toggleLights(callback: ErikCommandCallback = ErikCommandCallback.NONE) {
@@ -95,21 +107,19 @@ class ErikFragment : Fragment() {
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreateView(
-        inflater: android.view.LayoutInflater,
+        inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View {
         Log.e(LOG_TAG, "onCreateView")
         val context = requireContext()
-        val frameLayout =
-            FrameLayout(context).apply {
-                layoutParams =
-                    ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                    )
-                setBackgroundColor(Color.BLACK)
-            }
+        val root = inflater.inflate(R.layout.fragment_erik, container, false) as FrameLayout
+        val panoramaHost = root.findViewById<FrameLayout>(R.id.panorama_container)
+        val webViewHost = root.findViewById<FrameLayout>(R.id.webview_container)
+
+        panoramaContainer = panoramaHost
+        webViewContainer = webViewHost
+        configurePanorama(panoramaHost)
 
         val createdWebView =
             WebView(context).apply {
@@ -132,31 +142,35 @@ class ErikFragment : Fragment() {
                 addJavascriptInterface(ErikJavascriptBridge(::handleJavascriptMessage), JS_BRIDGE_NAME)
                 webChromeClient = createWebChromeClient()
                 webViewClient = createWebViewClient()
-                setOnTouchListener { view, event ->
-                    when (event.actionMasked) {
-                        MotionEvent.ACTION_DOWN,
-                        MotionEvent.ACTION_MOVE -> {
-                            view.parent?.requestDisallowInterceptTouchEvent(true)
-                        }
-
-                        MotionEvent.ACTION_UP,
-                        MotionEvent.ACTION_CANCEL -> {
-                            view.parent?.requestDisallowInterceptTouchEvent(false)
-                        }
-                    }
-                    false
-                }
+                setOnTouchListener(createTouchInterceptor())
                 loadUrl(ENTRYPOINT_URL)
                 postDelayed({ logJavascriptState(this) }, 4000)
             }
 
         webView = createdWebView
-        frameLayout.addView(createdWebView)
-        return frameLayout
+        webViewHost.addView(createdWebView)
+        updateSurfaceVisibility()
+        return root
+    }
+
+    override fun onResume() {
+        super.onResume()
+        panoramaManager?.onResume()
+    }
+
+    override fun onPause() {
+        panoramaManager?.onPause()
+        super.onPause()
     }
 
     override fun onDestroyView() {
         failPendingCommands("Erik view was destroyed before the command completed.")
+        panoramaManager?.onDestroy()
+        panoramaManager = null
+        panoramaContainer?.removeAllViews()
+        panoramaContainer = null
+        webViewContainer?.removeAllViews()
+        webViewContainer = null
         webView?.removeJavascriptInterface(JS_BRIDGE_NAME)
         webView?.apply {
             stopLoading()
@@ -165,6 +179,81 @@ class ErikFragment : Fragment() {
         }
         webView = null
         super.onDestroyView()
+    }
+
+    private fun configurePanorama(container: FrameLayout) {
+        val manager =
+            PLManager(requireContext()).apply {
+                setContentView(container)
+                onCreate()
+                isScrollingEnabled = true
+                isInertiaEnabled = true
+                isZoomEnabled = true
+                isAccelerometerEnabled = false
+                isAcceleratedTouchScrollingEnabled = false
+            }
+
+        val panoramaBitmap =
+            requireContext().assets.open(INTERIOR_PANORAMA_ASSET_PATH).use { stream ->
+                BitmapFactory.decodeStream(stream)
+            }
+        val panorama =
+            PLSphericalPanorama().apply {
+                setImage(PLImage(panoramaBitmap, false))
+                camera.lookAtAndZoomFactor(0f, 0f, 0f, false)
+                camera.rotationSensitivity = 270f
+            }
+
+        manager.panorama = panorama
+        val panoramaTouchView = manager.getGLSurfaceView() ?: container
+        panoramaTouchView.setOnTouchListener(createTouchInterceptor { event ->
+            manager.onTouchEvent(event)
+        })
+        panoramaManager = manager
+    }
+
+    private fun createTouchInterceptor(
+        onTouch: ((MotionEvent) -> Boolean)? = null,
+    ): View.OnTouchListener =
+        View.OnTouchListener { view, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN,
+                MotionEvent.ACTION_MOVE -> {
+                    view.parent?.requestDisallowInterceptTouchEvent(true)
+                }
+
+                MotionEvent.ACTION_UP,
+                MotionEvent.ACTION_CANCEL -> {
+                    view.parent?.requestDisallowInterceptTouchEvent(false)
+                }
+            }
+            onTouch?.invoke(event) ?: false
+        }
+
+    private fun surfaceCallback(
+        surface: ActiveSurface,
+        callback: ErikCommandCallback,
+    ): ErikCommandCallback =
+        object : ErikCommandCallback {
+            override fun onSuccess() {
+                activeSurface = surface
+                updateSurfaceVisibility()
+                callback.onSuccess()
+            }
+
+            override fun onError(message: String) {
+                callback.onError(message)
+            }
+        }
+
+    private fun updateSurfaceVisibility() {
+        val showingInterior = activeSurface == ActiveSurface.INTERIOR
+        panoramaContainer?.visibility = if (showingInterior) View.VISIBLE else View.INVISIBLE
+        webViewContainer?.visibility = if (showingInterior) View.INVISIBLE else View.VISIBLE
+    }
+
+    private fun resetInteriorView() {
+        panoramaManager?.reset()
     }
 
     private fun createWebChromeClient(): WebChromeClient =
@@ -391,6 +480,11 @@ class ErikFragment : Fragment() {
         val callback: ErikCommandCallback,
     )
 
+    private enum class ActiveSurface {
+        EXTERIOR,
+        INTERIOR,
+    }
+
     private class ErikJavascriptBridge(
         private val onMessage: (String) -> Unit,
     ) {
@@ -444,6 +538,7 @@ class ErikFragment : Fragment() {
 
     companion object {
         private const val ASSET_PATH = "erik_resources"
+        private const val INTERIOR_PANORAMA_ASSET_PATH = "interior/panorama_interior_v2.webp"
         private const val JS_BRIDGE_NAME = "ErikNativeBridge"
         private const val ENTRYPOINT_URL =
             "https://appassets.androidplatform.net/$ASSET_PATH/index.html"
