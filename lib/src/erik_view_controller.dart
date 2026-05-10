@@ -144,7 +144,7 @@ class ErikViewController extends ChangeNotifier {
     await _platformViewCompleter.future;
     final channel = _channel;
     if (channel == null) {
-      throw StateError('ErikView is not attached to a native Android view.');
+      throw StateError('ErikView is not attached to a native platform view.');
     }
     return channel;
   }

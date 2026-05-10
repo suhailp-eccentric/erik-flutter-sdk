@@ -1,0 +1,1428 @@
+{
+  "init": {
+    "color_space": "srgb",
+    "support_ssr": false,
+    "max_anisotropy": 16
+  },
+  "posts": {
+    "default": {
+      "taa": {
+        "on": true
+      },
+      "fxaa": {
+        "on": false
+      },
+      "tint": {
+        "on": false,
+        "shadow_max": 0.33,
+        "shadow_tint": [
+          0,
+          0,
+          0
+        ],
+        "midtone_tint": [
+          1,
+          1,
+          1
+        ],
+        "highlight_min": 0.66,
+        "highlight_tint": [
+          1,
+          1,
+          1
+        ]
+      },
+      "bloom": {
+        "on": true,
+        "scale": 0.25,
+        "threshold": 0.5,
+        "anisotropy": 1,
+        "num_layers": 3,
+        "num_samples": 16,
+        "radius_layer_0": 0.01,
+        "radius_layer_1": 0.05,
+        "radius_layer_2": 0.04,
+        "radius_layer_3": 0,
+        "intensity_layer_0": 0.01,
+        "intensity_layer_1": 0.02,
+        "intensity_layer_2": 0.04,
+        "intensity_layer_3": 0.05
+      },
+      "film_grain": {
+        "on": false
+      },
+      "brightness_contrast": {
+        "on": false,
+        "contrast": 0,
+        "brightness": 0
+      },
+      "saturation_vibrance": {
+        "on": false,
+        "vibrance": 0,
+        "saturation": 0
+      }
+    }
+  },
+  "assets": {
+    "sh": {
+      "Exterior_HDRI.ash": "Exterior_HDRI.ash",
+      "Exterior_HDRI_SIERRA.ash": "Exterior_HDRI_SIERRA.ash",
+      "Exterior_HDRI_SIERRA_V1.ash": "Exterior_HDRI_SIERRA_V1.ash"
+    },
+    "f2f": {},
+    "hdris": {
+      "Exterior_HDRI.hdr": "Exterior_HDRI.hdr",
+      "Exterior_HDRI_SIERRA.hdr": "Exterior_HDRI_SIERRA.hdr",
+      "Exterior_HDRI_SIERRA_V1.hdr": "Exterior_HDRI_SIERRA_V1.hdr"
+    },
+    "models": {
+      "TATA_SIERRA_EV_TOP_MESH.erik": "TATA_SIERRA_EV_TOP_MESH.erik",
+      "Sierra_Interior_360.erik": "Sierra_Interior_360.erik"
+    },
+    "preload": [
+      "TATA_SIERRA_EV_TOP_MESH.erik",
+      "Sierra_Interior_360.erik"
+    ],
+    "textures": {}
+  },
+  "states": {
+    "exterior": {
+      "post": "default",
+      "camera": "exterior",
+      "models": {
+        "TATA_SIERRA_EV_TOP_MESH.erik": {
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "pieces": [],
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "hotspots": [],
+      "materials": {
+        "glass": [
+          null
+        ],
+        "light": [
+          "HEADLIGHT",
+          "TAILLIGHT",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "unlit": [
+          null
+        ],
+        "shadow": [
+          null
+        ],
+        "carpaint": [
+          "Rishikesh_Rapids",
+          null,
+          null,
+          null
+        ]
+      },
+      "animations": [],
+      "environment": "default_env"
+    },
+    "interior": {
+      "post": "default",
+      "camera": "interior",
+      "models": {
+        "Sierra_Interior_360.erik": {
+          "scale": [5, 5, 5],
+          "pieces": [],
+          "position": [0, 0.41, 1.3],
+          "rotation": [0, 0, 0, 0]
+        }
+      },
+      "hotspots": [],
+      "materials": {
+        "glass": [
+          null
+        ],
+        "light": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "unlit": [
+          null
+        ],
+        "shadow": [
+          null
+        ],
+        "carpaint": [
+          "Coorg_Clouds",
+          null,
+          null,
+          null
+        ]
+      },
+      "animations": [],
+      "environment": "default_env"
+    }
+  },
+  "cameras": {
+    "orbits": {
+      "exterior": {
+        "focus": {
+          "mode": "off",
+          "point": [
+            0,
+            0
+          ],
+          "distance": 1
+        },
+        "target": [
+          0,
+          0,
+          1
+        ],
+        "movable": false,
+        "exposure": {
+          "mode": "off",
+          "aperture": 11,
+          "shutter_speed": 0.008,
+          "exposure_correction": 0
+        },
+        "position": [
+          -10,
+          -6.27,
+          1.27
+        ],
+        "max_radius": 10,
+        "min_radius": 4,
+        "__comment":"min_radius: 4 , this is the old value to make zoom happen again",
+        "focal_length": 105.6,
+        "max_elevation": 1.4,
+        "min_elevation": 0.03
+      },
+      "internal_free_orbit_camera": {
+        "focus": {
+          "mode": "off",
+          "point": [
+            0,
+            0
+          ],
+          "distance": 1
+        },
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "movable": true,
+        "exposure": {
+          "mode": "aperture_priority",
+          "aperture": 11,
+          "shutter_speed": 0.008,
+          "exposure_correction": 0
+        },
+        "position": [
+          0,
+          0,
+          1
+        ],
+        "max_radius": 1000,
+        "min_radius": 0.1,
+        "focal_length": 50,
+        "max_elevation": 1.4,
+        "min_elevation": -1.4
+      }
+    },
+    "statics": {
+      "forward": {
+        "focus": {
+          "mode": "point",
+          "point": [
+            0,
+            0
+          ],
+          "distance": 1
+        },
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "exposure": {
+          "mode": "aperture_priority",
+          "aperture": 11,
+          "shutter_speed": 0.008,
+          "exposure_correction": 0
+        },
+        "position": [
+          0,
+          -5,
+          1
+        ],
+        "focal_length": 50
+      },
+      "animated_Alloy_Cam": {
+        "focus": {
+          "mode": "off",
+          "point": [
+            0,
+            0
+          ],
+          "distance": 1
+        },
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "exposure": {
+          "mode": "off",
+          "aperture": 11,
+          "shutter_speed": 0.008,
+          "exposure_correction": 0
+        },
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "focal_length": 99.9
+      },
+      "animated_Sunroof_Cam": {
+        "focus": {
+          "mode": "off",
+          "point": [
+            0,
+            0
+          ],
+          "distance": 1
+        },
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "exposure": {
+          "mode": "off",
+          "aperture": 11,
+          "shutter_speed": 0.008,
+          "exposure_correction": 0
+        },
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "focal_length": 101.8
+      },
+      "animated_Cinematic_Cam_01": {
+        "focus": {
+          "mode": "off",
+          "point": [
+            0,
+            0
+          ],
+          "distance": 1
+        },
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "exposure": {
+          "mode": "off",
+          "aperture": 11,
+          "shutter_speed": 0.008,
+          "exposure_correction": 0
+        },
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "focal_length": 126.6
+      },
+      "animated_Cinematic_Cam_02": {
+        "focus": {
+          "mode": "off",
+          "point": [
+            0,
+            0
+          ],
+          "distance": 1
+        },
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "exposure": {
+          "mode": "off",
+          "aperture": 11,
+          "shutter_speed": 0.008,
+          "exposure_correction": 0
+        },
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "focal_length": 70.1
+      },
+      "animated_Cinematic_Cam_03": {
+        "focus": {
+          "mode": "off",
+          "point": [
+            0,
+            0
+          ],
+          "distance": 1
+        },
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "exposure": {
+          "mode": "off",
+          "aperture": 11,
+          "shutter_speed": 0.008,
+          "exposure_correction": 0
+        },
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "focal_length": 103.1
+      },
+      "animated_Heritage_Design_Cam": {
+        "focus": {
+          "mode": "off",
+          "point": [
+            0,
+            0
+          ],
+          "distance": 1
+        },
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "exposure": {
+          "mode": "off",
+          "aperture": 11,
+          "shutter_speed": 0.008,
+          "exposure_correction": 0
+        },
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "focal_length": 100
+      },
+      "animated_Heritage_Design_Cam_01": {
+        "focus": {
+          "mode": "off",
+          "point": [
+            0,
+            0
+          ],
+          "distance": 1
+        },
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "exposure": {
+          "mode": "off",
+          "aperture": 11,
+          "shutter_speed": 0.008,
+          "exposure_correction": 0
+        },
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "focal_length": 122.8
+      }
+    },
+    "free_looks": {
+      "interior": {
+        "focus": {
+          "mode": "point",
+          "point": [
+            0,
+            0
+          ],
+          "distance": 1
+        },
+        "target": [
+          -0.02,
+          -0.69,
+          -0.19
+        ],
+        "exposure": {
+          "mode": "aperture_priority",
+          "aperture": 11,
+          "shutter_speed": 0.008,
+          "exposure_correction": 0
+        },
+        "position": [
+          0,
+          0.41,
+          1.3
+        ],
+        "focal_length": 50
+      }
+    }
+  },
+  "hotspots": {},
+  "materials": {
+    "glass": {
+      "very_dark": {
+        "opacity": 0.99
+      },
+      "see_through": {
+        "opacity": 0.1
+      }
+    },
+    "light": {
+      "HEADLIGHT": {
+        "color": [
+          1,
+          1,
+          1
+        ],
+        "intensity": 18.63
+      },
+      "TAILLIGHT": {
+        "color": [
+          0.3607843137254902,
+          0,
+          0
+        ],
+        "intensity": 8.33
+      }
+    },
+    "unlit": {},
+    "shadow": {
+      "hidden": {
+        "opacity": 0
+      }
+    },
+    "carpaint": {
+      "Oxide": {
+        "base_ior": 2.3,
+        "clearcoat": 1,
+        "base_color": [
+          0.7803921568627451,
+          0.8352941176470589,
+          0.8392156862745098
+        ],
+        "flake_flop": 0.06,
+        "flake_color": [
+          1,
+          1,
+          1
+        ],
+        "clearcoat_ior": 2.6,
+        "duotone_color": [
+          0.7372549019607844,
+          0.7803921568627451,
+          0.7803921568627451
+        ],
+        "duotone_power": 2.01,
+        "flake_density": 1,
+        "base_roughness": 1,
+        "flake_strength": 0.191,
+        "flake_uv_scale": 32,
+        "ao_map_intensity": 1,
+        "base_metallicness": 0,
+        "emissive_intensity": 1,
+        "clearcoat_roughness": 0.001,
+        "light_map_intensity": 1,
+        "max_flake_roughness": 0.85,
+        "min_flake_roughness": 0.16,
+        "normal_map_intensity": 1,
+        "orange_peel_strength": 0.005,
+        "orange_peel_uv_scale": 3
+      },
+      "Pure_Grey": {
+        "base_ior": 1.4,
+        "clearcoat": 1,
+        "base_color": [
+          0.4117647058823529,
+          0.4117647058823529,
+          0.4117647058823529
+        ],
+        "flake_flop": 0.05,
+        "flake_color": [
+          0.7529,
+          0.7529,
+          0.7529
+        ],
+        "clearcoat_ior": 1.5,
+        "duotone_color": [
+          0.5569,
+          0.5647,
+          0.5647
+        ],
+        "duotone_power": 1.2,
+        "flake_density": 1,
+        "base_roughness": 0.76,
+        "flake_strength": 0.275,
+        "flake_uv_scale": 90,
+        "ao_map_intensity": 1,
+        "base_metallicness": 0.25,
+        "emissive_intensity": 1,
+        "clearcoat_roughness": 0.001,
+        "light_map_intensity": 1,
+        "max_flake_roughness": 0.13,
+        "min_flake_roughness": 0.23,
+        "normal_map_intensity": 1,
+        "orange_peel_strength": 0.002,
+        "orange_peel_uv_scale": 5.54
+      },
+      "Coorg_Clouds": {
+        "base_ior": 1.4,
+        "clearcoat": 1,
+        "base_color": [
+          0.7803921568627451,
+          0.7490196078431373,
+          0.7411764705882353
+        ],
+        "flake_flop": 0.49,
+        "flake_color": [
+          1,
+          1,
+          1
+        ],
+        "clearcoat_ior": 1.86,
+        "duotone_color": [
+          1,
+          0.9686274509803922,
+          0.9607843137254902
+        ],
+        "duotone_power": 2.21,
+        "flake_density": 1,
+        "base_roughness": 0.86,
+        "flake_strength": 0.289,
+        "flake_uv_scale": 80,
+        "ao_map_intensity": 1,
+        "base_metallicness": 0.12,
+        "emissive_intensity": 1,
+        "clearcoat_roughness": 0.001,
+        "light_map_intensity": 1,
+        "max_flake_roughness": 0.22,
+        "min_flake_roughness": 0.31,
+        "normal_map_intensity": 1,
+        "orange_peel_strength": 0.005,
+        "orange_peel_uv_scale": 3
+      },
+      "Pristine_White": {
+        "base_ior": 1.4,
+        "clearcoat": 1,
+        "base_color": [
+          1,
+          1,
+          1
+        ],
+        "flake_flop": 0.11,
+        "flake_color": [
+          1,
+          1,
+          1
+        ],
+        "clearcoat_ior": 2.35,
+        "duotone_color": [
+          1,
+          1,
+          1
+        ],
+        "duotone_power": 3.87,
+        "flake_density": 1,
+        "base_roughness": 1,
+        "flake_strength": 0.211,
+        "flake_uv_scale": 32,
+        "ao_map_intensity": 1,
+        "base_metallicness": 0,
+        "emissive_intensity": 1,
+        "clearcoat_roughness": 0.001,
+        "light_map_intensity": 1,
+        "max_flake_roughness": 0.71,
+        "min_flake_roughness": 0.06,
+        "normal_map_intensity": 1,
+        "orange_peel_strength": 0.005,
+        "orange_peel_uv_scale": 3
+      },
+      "Rishikesh_Rapids": {
+        "base_ior": 1.25,
+        "clearcoat": 1,
+        "base_color": [
+          0.4862745098039216,
+          0.6352941176470588,
+          0.611764705882353
+        ],
+        "flake_flop": 0.05,
+        "flake_color": [
+          1,
+          1,
+          1
+        ],
+        "clearcoat_ior": 0.44,
+        "duotone_color": [
+          0.5411764705882353,
+          0.6784313725490196,
+          0.6705882352941176
+        ],
+        "duotone_power": 0.74,
+        "flake_density": 1,
+        "base_roughness": 0.7000000000000001,
+        "flake_strength": 0.3,
+        "flake_uv_scale": 54,
+        "ao_map_intensity": 1,
+        "base_metallicness": 0.28,
+        "emissive_intensity": 1,
+        "clearcoat_roughness": 0.001,
+        "light_map_intensity": 1,
+        "max_flake_roughness": 0.07,
+        "min_flake_roughness": 0.14,
+        "normal_map_intensity": 1,
+        "orange_peel_strength": 0.001,
+        "orange_peel_uv_scale": 3
+      },
+      "Andaman_Adventure": {
+        "base_ior": 1.4,
+        "clearcoat": 1,
+        "base_color": [
+          1,
+          0.6980392156862745,
+          0.00784313725490196
+        ],
+        "flake_flop": 0.05,
+        "flake_color": [
+          0.996078431372549,
+          0.5647058823529412,
+          0.1647058823529412
+        ],
+        "clearcoat_ior": 1.76,
+        "duotone_color": [
+          1,
+          0.7019607843137254,
+          0
+        ],
+        "duotone_power": 2.01,
+        "flake_density": 1,
+        "base_roughness": 0.78,
+        "flake_strength": 0.25,
+        "flake_uv_scale": 75,
+        "ao_map_intensity": 1,
+        "base_metallicness": 0,
+        "emissive_intensity": 1,
+        "clearcoat_roughness": 0.001,
+        "light_map_intensity": 1,
+        "max_flake_roughness": 0.28,
+        "min_flake_roughness": 0.12,
+        "normal_map_intensity": 1,
+        "orange_peel_strength": 0.005,
+        "orange_peel_uv_scale": 3
+      },
+      "Nainital_Nocturne": {
+        "base_ior": 1.76,
+        "clearcoat": 1,
+        "base_color": [
+          0.2156862745098039,
+          0.4705882352941176,
+          0.6627450980392157
+        ],
+        "flake_flop": 0.54,
+        "flake_color": [
+          0.8313725490196079,
+          0.6078431372549019,
+          0.9529411764705882
+        ],
+        "clearcoat_ior": 1.27,
+        "duotone_color": [
+          0.2549019607843137,
+          0.4705882352941176,
+          0.7058823529411765
+        ],
+        "duotone_power": 2.01,
+        "flake_density": 1.5,
+        "base_roughness": 0.5700000000000001,
+        "flake_strength": 0.15,
+        "flake_uv_scale": 110,
+        "ao_map_intensity": 1,
+        "base_metallicness": 0.3,
+        "emissive_intensity": 1,
+        "clearcoat_roughness": 0.001,
+        "light_map_intensity": 1,
+        "max_flake_roughness": 0.09,
+        "min_flake_roughness": 0,
+        "normal_map_intensity": 1,
+        "orange_peel_strength": 0.0001,
+        "orange_peel_uv_scale": 3
+      },
+      "Bengal_Rouge_Tinted": {
+        "base_ior": 1.4,
+        "clearcoat": 0.82,
+        "base_color": [
+          0.8392156862745098,
+          0,
+          0.1686274509803922
+        ],
+        "flake_flop": 0.05,
+        "flake_color": [
+          1,
+          0.4,
+          0.4
+        ],
+        "clearcoat_ior": 1.96,
+        "duotone_color": [
+          1,
+          0,
+          0.2
+        ],
+        "duotone_power": 2.65,
+        "flake_density": 1,
+        "base_roughness": 1,
+        "flake_strength": 0.314,
+        "flake_uv_scale": 80,
+        "ao_map_intensity": 1,
+        "base_metallicness": 0.44,
+        "emissive_intensity": 1,
+        "clearcoat_roughness": 0.001,
+        "light_map_intensity": 1,
+        "max_flake_roughness": 0.28,
+        "min_flake_roughness": 0.46,
+        "normal_map_intensity": 1,
+        "orange_peel_strength": 0.001,
+        "orange_peel_uv_scale": 3
+      }
+    }
+  },
+  "animations": {
+    "Alloy_Cam": {
+      "repeat": "once",
+      "target": "cameras/main",
+      "tracks": {
+        "Transform/euler": [
+          [
+            0,
+            [
+              0,
+              -0.000002146754979953025,
+              3.82576172037157
+            ],
+            "linear"
+          ],
+          [
+            3,
+            [
+              0.0174532925199433,
+              0,
+              3.141592653589793
+            ],
+            "linear"
+          ]
+        ],
+        "Transform/position": [
+          [
+            0,
+            [
+              -4.31127,
+              4.22,
+              0.598036
+            ],
+            "linear"
+          ],
+          [
+            3,
+            [
+              -1.36,
+              5.1,
+              0.57
+            ],
+            "linear"
+          ]
+        ]
+      }
+    },
+    "Sunroof_Cam": {
+      "repeat": "once",
+      "target": "cameras/main",
+      "tracks": {
+        "Transform/euler": [
+          [
+            0,
+            [
+              -0.1396263401595464,
+              -5.410520681182422e-7,
+              4.098033083682686
+            ],
+            "linear"
+          ],
+          [
+            3,
+            [
+              -0.4363323129985824,
+              -0.000001954768762233649,
+              4.146902302738527
+            ],
+            "linear"
+          ]
+        ],
+        "Transform/position": [
+          [
+            0,
+            [
+              -6.279999999999999,
+              4.01158,
+              2.01867
+            ],
+            "linear"
+          ],
+          [
+            3,
+            [
+              -2.17584,
+              1.80035,
+              3.23291
+            ],
+            "linear"
+          ]
+        ]
+      }
+    },
+    "SUNROOF_OPEN": {
+      "repeat": "once",
+      "target": "TATA_SIERRA_EV_TOP_MESH.erik",
+      "tracks": {
+        "Skinned/SUNROOF_MESH/euler": [
+          [
+            0,
+            [
+              0,
+              0,
+              0
+            ],
+            "linear"
+          ],
+          [
+            0.36,
+            [
+              0,
+              -0.06981317007977318,
+              0
+            ],
+            "linear"
+          ],
+          [
+            0.65,
+            [
+              0,
+              -0.0174532925199433,
+              0
+            ],
+            "linear"
+          ],
+          [
+            2,
+            [
+              0,
+              0,
+              0
+            ],
+            "linear"
+          ]
+        ],
+        "Skinned/SUNROOF_MESH/position": [
+          [
+            0,
+            [
+              0.001495,
+              0,
+              1.68368
+            ],
+            "linear"
+          ],
+          [
+            0.36,
+            [
+              0,
+              0,
+              1.68
+            ],
+            "linear"
+          ],
+          [
+            0.65,
+            [
+              0.06,
+              0,
+              1.7
+            ],
+            "linear"
+          ],
+          [
+            2,
+            [
+              0.55,
+              0,
+              1.71
+            ],
+            "linear"
+          ]
+        ]
+      }
+    },
+    "Cinematic_Cam_01": {
+      "repeat": "once",
+      "target": "cameras/main",
+      "tracks": {
+        "Transform/euler": [
+          [
+            0,
+            [
+              0,
+              2.443460952792062e-7,
+              -1.500983156715124
+            ],
+            "linear"
+          ],
+          [
+            3,
+            [
+              0,
+              0,
+              -1.570796326794897
+            ],
+            "linear"
+          ]
+        ],
+        "Transform/position": [
+          [
+            0,
+            [
+              -6.42,
+              1.25,
+              1.040000000000001
+            ],
+            "linear"
+          ],
+          [
+            3,
+            [
+              -6.42,
+              -1.25,
+              1.04
+            ],
+            "linear"
+          ]
+        ]
+      }
+    },
+    "Cinematic_Cam_02": {
+      "repeat": "once",
+      "target": "cameras/main",
+      "tracks": {
+        "Transform/target": [
+          [
+            0,
+            [
+              0,
+              0,
+              0.99
+            ],
+            "linear"
+          ],
+          [
+            2,
+            [
+              0,
+              0,
+              0.990000000000002
+            ],
+            "linear"
+          ],
+          [
+            4,
+            [
+              0,
+              0,
+              0.990000000000002
+            ],
+            "linear"
+          ]
+        ],
+        "Transform/position": [
+          [
+            0,
+            [
+              0,
+              -5.31,
+              1.28706
+            ],
+            "linear"
+          ],
+          [
+            4,
+            [
+              0.01,
+              -1.12,
+              6.449999999999999
+            ],
+            "linear"
+          ]
+        ]
+      }
+    },
+    "Cinematic_Cam_03": {
+      "repeat": "once",
+      "target": "cameras/main",
+      "tracks": {
+        "Transform/euler": [
+          [
+            0,
+            [
+              0,
+              -0.000003892084231947355,
+              0
+            ],
+            "linear"
+          ],
+          [
+            3,
+            [
+              0,
+              0,
+              0
+            ],
+            "linear"
+          ]
+        ],
+        "Transform/position": [
+          [
+            0,
+            [
+              -1.44932,
+              -5.39362,
+              1.05
+            ],
+            "linear"
+          ],
+          [
+            3,
+            [
+              1.73,
+              -5.47,
+              1.07
+            ],
+            "linear"
+          ]
+        ]
+      }
+    },
+    "Heritage_Design_Cam": {
+      "repeat": "once",
+      "target": "cameras/main",
+      "tracks": {
+        "Transform/euler": [
+          [
+            0,
+            [
+              0,
+              0,
+              3.965388060531116
+            ],
+            "linear"
+          ],
+          [
+            3,
+            [
+              -0.2094395102393196,
+              0.0174532925199433,
+              3.961897402027128
+            ],
+            "linear"
+          ]
+        ],
+        "Transform/position": [
+          [
+            0,
+            [
+              -5.24364,
+              4.78102,
+              0.959038
+            ],
+            "linear"
+          ],
+          [
+            3,
+            [
+              -6.10897,
+              5.70153,
+              2.65694
+            ],
+            "linear"
+          ]
+        ]
+      }
+    },
+    "Heritage_Design_Cam_01": {
+      "repeat": "once",
+      "target": "cameras/main",
+      "tracks": {
+        "Transform/euler": [
+          [
+            0,
+            [
+              0,
+              -9.424777960769379e-7,
+              1.117010721276371
+            ],
+            "linear"
+          ],
+          [
+            4,
+            [
+              -0.3839724354387525,
+              0.0174532925199433,
+              0.8552113334772214
+            ],
+            "linear"
+          ]
+        ],
+        "Transform/position": [
+          [
+            0,
+            [
+              7.73959,
+              -3.9503,
+              1.17833
+            ],
+            "linear"
+          ],
+          [
+            4,
+            [
+              6.04242,
+              -5.46621,
+              4.05396
+            ],
+            "linear"
+          ]
+        ]
+      }
+    },
+    "TATA_SIERRA_EV_TOP_MESH.erik/FL_DOOR/quaternion": {
+      "repeat": "once",
+      "target": "TATA_SIERRA_EV_TOP_MESH.erik",
+      "tracks": {
+        "Skinned/FL_DOOR/euler": [
+          [
+            0,
+            [
+              0,
+              0,
+              0
+            ],
+            "expo_in_out"
+          ],
+          [
+            1,
+            [
+              0,
+              0,
+              -1.047197551196598
+            ],
+            "expo_in_out"
+          ]
+        ]
+      }
+    },
+    "TATA_SIERRA_EV_TOP_MESH.erik/FR_DOOR/quaternion": {
+      "repeat": "once",
+      "target": "TATA_SIERRA_EV_TOP_MESH.erik",
+      "tracks": {
+        "Skinned/FR_DOOR/euler": [
+          [
+            0,
+            [
+              0,
+              0,
+              0
+            ],
+            "expo_in_out"
+          ],
+          [
+            1,
+            [
+              0,
+              0,
+              1.047197551196598
+            ],
+            "expo_in_out"
+          ]
+        ]
+      }
+    },
+    "TATA_SIERRA_EV_TOP_MESH.erik/RL_DOOR/quaternion": {
+      "repeat": "once",
+      "target": "TATA_SIERRA_EV_TOP_MESH.erik",
+      "tracks": {
+        "Skinned/RL_DOOR/euler": [
+          [
+            0,
+            [
+              0,
+              0,
+              0
+            ],
+            "expo_in_out"
+          ],
+          [
+            1,
+            [
+              0,
+              0,
+              -1.047197551196598
+            ],
+            "expo_in_out"
+          ]
+        ]
+      }
+    },
+    "TATA_SIERRA_EV_TOP_MESH.erik/RR_DOOR/quaternion": {
+      "repeat": "once",
+      "target": "TATA_SIERRA_EV_TOP_MESH.erik",
+      "tracks": {
+        "Skinned/RR_DOOR/euler": [
+          [
+            0,
+            [
+              0,
+              0,
+              0
+            ],
+            "expo_in_out"
+          ],
+          [
+            1,
+            [
+              0,
+              0,
+              1.047197551196598
+            ],
+            "expo_in_out"
+          ]
+        ]
+      }
+    },
+    "TATA_SIERRA_EV_TOP_MESH.erik/TAILGATE/quaternion": {
+      "repeat": "once",
+      "target": "TATA_SIERRA_EV_TOP_MESH.erik",
+      "tracks": {
+        "Skinned/TAILGATE/euler": [
+          [
+            0,
+            [
+              0,
+              0,
+              0
+            ],
+            "expo_in_out"
+          ],
+          [
+            1,
+            [
+              0,
+              -1.134464013796314,
+              0
+            ],
+            "expo_in_out"
+          ]
+        ]
+      }
+    },
+    "TATA_SIERRA_EV_TOP_MESH.erik/FL_DOOR_ORVM/quaternion": {
+      "repeat": "once",
+      "target": "TATA_SIERRA_EV_TOP_MESH.erik",
+      "tracks": {
+        "Skinned/FL_DOOR_ORVM/euler": [
+          [
+            0,
+            [
+              0,
+              0,
+              0
+            ],
+            "expo_in_out"
+          ],
+          [
+            1,
+            [
+              0,
+              0,
+              1.570796326794897
+            ],
+            "expo_in_out"
+          ]
+        ]
+      }
+    }
+  },
+  "active_state": "exterior",
+  "content_root": {
+    "path": "",
+    "type": "api"
+  },
+  "environments": {
+    "default_env": {
+      "gi": {
+        "sh": "Exterior_HDRI_SIERRA.ash",
+        "hdr": "Exterior_HDRI_SIERRA.hdr",
+        "intensity": 10
+      },
+      "lights": {
+        "spots": [],
+        "points": [],
+        "directionals": []
+      },
+      "skybox": "Exterior_HDRI_SIERRA.hdr",
+      "ao_map_intensity": 1.5,
+      "background_color": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "light_map_intensity": 1.96
+    }
+  },
+  "adjuster_version": "1.7.5"
+}

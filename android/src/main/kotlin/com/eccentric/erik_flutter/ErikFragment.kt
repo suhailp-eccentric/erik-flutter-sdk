@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -29,6 +31,7 @@ class ErikFragment : Fragment() {
     }
 
     private val pendingCommands = mutableListOf<PendingCommand>()
+    private val mainHandler = Handler(Looper.getMainLooper())
 
     private var listener: Listener? = null
     private var webView: WebView? = null
@@ -42,7 +45,7 @@ class ErikFragment : Fragment() {
 
     fun setListener(listener: Listener?) {
         this.listener = listener
-        listener?.onStateChanged(currentState())
+        dispatchState()
     }
 
     fun currentState(): ErikRuntimeState = ErikRuntimeState(isReady, isIntroAnimationPlaying)
@@ -70,10 +73,12 @@ class ErikFragment : Fragment() {
     }
 
     fun goInterior(callback: ErikCommandCallback = ErikCommandCallback.NONE) {
-        resetInteriorView()
-        activeSurface = ActiveSurface.INTERIOR
-        updateSurfaceVisibility()
-        callback.onSuccess()
+        runOnMainThread {
+            resetInteriorView()
+            activeSurface = ActiveSurface.INTERIOR
+            updateSurfaceVisibility()
+            callback.onSuccess()
+        }
     }
 
     fun goExterior(callback: ErikCommandCallback = ErikCommandCallback.NONE) {
@@ -264,6 +269,7 @@ class ErikFragment : Fragment() {
                 when {
                     message.contains("Starting trailer camera") -> setIntroAnimationPlaying(true)
                     message.contains("Trailer camera sequence finished") -> setIntroAnimationPlaying(false)
+                    message.contains("Trailer camera sequence skipped") -> setIntroAnimationPlaying(false)
                 }
                 return super.onConsoleMessage(consoleMessage)
             }
@@ -424,18 +430,25 @@ class ErikFragment : Fragment() {
     }
 
     private fun failPendingCommands(message: String) {
-        if (pendingCommands.isEmpty()) {
-            return
-        }
+        runOnMainThread {
+            if (pendingCommands.isEmpty()) {
+                return@runOnMainThread
+            }
 
-        val commandsToFail = pendingCommands.toList()
-        pendingCommands.clear()
-        commandsToFail.forEach { pending ->
-            pending.callback.onError(message)
+            val commandsToFail = pendingCommands.toList()
+            pendingCommands.clear()
+            commandsToFail.forEach { pending ->
+                pending.callback.onError(message)
+            }
         }
     }
 
     private fun setReady(ready: Boolean) {
+        if (!isMainThread()) {
+            runOnMainThread { setReady(ready) }
+            return
+        }
+
         if (isReady == ready) {
             return
         }
@@ -445,6 +458,11 @@ class ErikFragment : Fragment() {
     }
 
     private fun setIntroAnimationPlaying(playing: Boolean) {
+        if (!isMainThread()) {
+            runOnMainThread { setIntroAnimationPlaying(playing) }
+            return
+        }
+
         if (isIntroAnimationPlaying == playing) {
             return
         }
@@ -454,8 +472,10 @@ class ErikFragment : Fragment() {
     }
 
     private fun dispatchState() {
-        Log.e(LOG_TAG, "state ready=$isReady intro=$isIntroAnimationPlaying")
-        listener?.onStateChanged(currentState())
+        runOnMainThread {
+            Log.e(LOG_TAG, "state ready=$isReady intro=$isIntroAnimationPlaying")
+            listener?.onStateChanged(currentState())
+        }
     }
 
     private fun logJavascriptState(target: WebView) {
@@ -493,6 +513,16 @@ class ErikFragment : Fragment() {
             onMessage(message)
         }
     }
+
+    private fun runOnMainThread(action: () -> Unit) {
+        if (isMainThread()) {
+            action()
+        } else {
+            mainHandler.post(action)
+        }
+    }
+
+    private fun isMainThread(): Boolean = Looper.myLooper() == Looper.getMainLooper()
 
     private class ErikAssetPathHandler(
         context: android.content.Context,

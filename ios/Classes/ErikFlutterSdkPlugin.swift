@@ -6,6 +6,13 @@ public class ErikFlutterSdkPlugin: NSObject, FlutterPlugin {
     let channel = FlutterMethodChannel(name: "erik_flutter_sdk", binaryMessenger: registrar.messenger())
     let instance = ErikFlutterSdkPlugin()
     registrar.addMethodCallDelegate(instance, channel: channel)
+    registrar.register(
+      ErikPlatformViewFactory(
+        messenger: registrar.messenger(),
+        assetResolver: ErikAssetResolver(registrar: registrar)
+      ),
+      withId: "erik_flutter_sdk/erik_fragment_view"
+    )
   }
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {

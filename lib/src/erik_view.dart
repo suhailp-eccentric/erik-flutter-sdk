@@ -45,14 +45,14 @@ class _ErikViewState extends State<ErikView> {
 
   @override
   Widget build(BuildContext context) {
-    if (!Platform.isAndroid) {
+    if (!Platform.isAndroid && !Platform.isIOS) {
       return const DecoratedBox(
         decoration: BoxDecoration(color: Colors.black),
         child: Center(
           child: Padding(
             padding: EdgeInsets.all(24),
             child: Text(
-              'ErikView currently uses the native Android fragment flow.',
+              'ErikView currently uses native Android and iOS platform views.',
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white70, fontSize: 14),
             ),
@@ -66,11 +66,18 @@ class _ErikViewState extends State<ErikView> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          AndroidView(
-            viewType: 'erik_flutter_sdk/erik_fragment_view',
-            layoutDirection: TextDirection.ltr,
-            onPlatformViewCreated: widget.controller.attachPlatformView,
-          ),
+          if (Platform.isAndroid)
+            AndroidView(
+              viewType: 'erik_flutter_sdk/erik_fragment_view',
+              layoutDirection: TextDirection.ltr,
+              onPlatformViewCreated: widget.controller.attachPlatformView,
+            )
+          else
+            UiKitView(
+              viewType: 'erik_flutter_sdk/erik_fragment_view',
+              layoutDirection: TextDirection.ltr,
+              onPlatformViewCreated: widget.controller.attachPlatformView,
+            ),
           if (!widget.controller.isReady)
             const Center(
               child: SizedBox(
