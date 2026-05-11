@@ -27,6 +27,7 @@ class ErikPlatformView(
 
     private var fragmentActivity: FragmentActivity? = null
     private var erikFragment: ErikFragment? = null
+    private var disposed = false
 
     init {
         channel.setMethodCallHandler(this)
@@ -37,6 +38,7 @@ class ErikPlatformView(
     override fun getView(): View = containerView
 
     override fun dispose() {
+        disposed = true
         erikFragment?.setListener(null)
         channel.setMethodCallHandler(null)
 
@@ -147,13 +149,46 @@ class ErikPlatformView(
         erikFragment = fragment
 
         if (existingFragment == null) {
-            fragmentManager
-                .beginTransaction()
-                .replace(containerId, fragment, fragmentTag)
-                .commitNowAllowingStateLoss()
+            fragmentContainerView.replaceWithFragmentWhenAttached(containerId, fragment)
         }
 
         return fragmentContainerView
+    }
+
+    private fun FragmentContainerView.replaceWithFragmentWhenAttached(
+        containerId: Int,
+        fragment: ErikFragment,
+    ) {
+        if (isAttachedToWindow) {
+            replaceWithFragment(containerId, fragment)
+            return
+        }
+
+        addOnAttachStateChangeListener(
+            object : View.OnAttachStateChangeListener {
+                override fun onViewAttachedToWindow(view: View) {
+                    removeOnAttachStateChangeListener(this)
+                    replaceWithFragment(containerId, fragment)
+                }
+
+                override fun onViewDetachedFromWindow(view: View) = Unit
+            },
+        )
+    }
+
+    private fun replaceWithFragment(
+        containerId: Int,
+        fragment: ErikFragment,
+    ) {
+        val activity = fragmentActivity ?: return
+        if (disposed || activity.supportFragmentManager.isDestroyed) {
+            return
+        }
+
+        activity.supportFragmentManager
+            .beginTransaction()
+            .replace(containerId, fragment, fragmentTag)
+            .commitNowAllowingStateLoss()
     }
 
     private fun dispatchState(state: ErikRuntimeState) {

@@ -1,6 +1,10 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'erik_view_controller.dart';
 
 class ErikView extends StatefulWidget {
@@ -67,11 +71,7 @@ class _ErikViewState extends State<ErikView> {
         fit: StackFit.expand,
         children: [
           if (Platform.isAndroid)
-            AndroidView(
-              viewType: 'erik_flutter_sdk/erik_fragment_view',
-              layoutDirection: TextDirection.ltr,
-              onPlatformViewCreated: widget.controller.attachPlatformView,
-            )
+            _buildAndroidView()
           else
             UiKitView(
               viewType: 'erik_flutter_sdk/erik_fragment_view',
@@ -88,6 +88,34 @@ class _ErikViewState extends State<ErikView> {
             ),
         ],
       ),
+    );
+  }
+
+  Widget _buildAndroidView() {
+    const viewType = 'erik_flutter_sdk/erik_fragment_view';
+    return PlatformViewLink(
+      viewType: viewType,
+      surfaceFactory: (context, controller) {
+        return AndroidViewSurface(
+          controller: controller as AndroidViewController,
+          gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{},
+          hitTestBehavior: PlatformViewHitTestBehavior.opaque,
+        );
+      },
+      onCreatePlatformView: (params) {
+        return PlatformViewsService.initExpensiveAndroidView(
+            id: params.id,
+            viewType: viewType,
+            layoutDirection: TextDirection.ltr,
+            creationParamsCodec: const StandardMessageCodec(),
+            onFocus: () => params.onFocusChanged(true),
+          )
+          ..addOnPlatformViewCreatedListener(params.onPlatformViewCreated)
+          ..addOnPlatformViewCreatedListener(
+            widget.controller.attachPlatformView,
+          )
+          ..create();
+      },
     );
   }
 }
