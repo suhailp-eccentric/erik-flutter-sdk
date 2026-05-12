@@ -31,6 +31,7 @@ dependencies:
   erik_flutter_sdk:
     git:
       url: https://suhailp-eccentric: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@github.com/suhailp-eccentric/erik-flutter-sdk.git
+      ref: 1.0.0
 ```
 
 Then fetch packages:
