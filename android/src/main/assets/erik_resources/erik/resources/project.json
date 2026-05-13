@@ -76,12 +76,10 @@
       "Exterior_HDRI_SIERRA_V1.hdr": "Exterior_HDRI_SIERRA_V1.hdr"
     },
     "models": {
-      "TATA_SIERRA_EV_TOP_MESH.erik": "TATA_SIERRA_EV_TOP_MESH.erik",
-      "Sierra_Interior_360.erik": "Sierra_Interior_360.erik"
+      "TATA_SIERRA_EV_TOP_MESH.erik": "TATA_SIERRA_EV_TOP_MESH.erik"
     },
     "preload": [
-      "TATA_SIERRA_EV_TOP_MESH.erik",
-      "Sierra_Interior_360.erik"
+      "TATA_SIERRA_EV_TOP_MESH.erik"
     ],
     "textures": {}
   },
@@ -144,14 +142,7 @@
     "interior": {
       "post": "default",
       "camera": "interior",
-      "models": {
-        "Sierra_Interior_360.erik": {
-          "scale": [5, 5, 5],
-          "pieces": [],
-          "position": [0, 0.41, 1.3],
-          "rotation": [0, 0, 0, 0]
-        }
-      },
+      "models": {},
       "hotspots": [],
       "materials": {
         "glass": [
